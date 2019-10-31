@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<head>
+<meta charset="utf-8">
+<title>Collapse OS Web Emulators</title>
+<style type="text/css">
+body { font-family: Verdana, Arial, Helvetica, sans-serif; }
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.2.0/gh-fork-ribbon.min.css" />
+</head>
+<body>
+<a class="github-fork-ribbon" href="https://github.com/schierlm/CollapseOS-Web-Emulator/" title="Fork me on GitHub">Fork me on GitHub</a>
+<h1>Collapse OS Web Emulators</h1>
+
+<p>Based on <a href="https://github.com/DrGoldfire/Z80.js">a Z80 JavaScript emulator</a>, this project aims to emulate
+<a href="https://collapseos.org/">CollapseOS</a> within your browser.</p>
+
+<p>There are three emulators with different built-in (virtual) hardware available, as well as a tool to edit virtual SD cards that use
+the CFS filesystem.</p>
+
+<p>When loading this from <a href="https://schierlm.github.io/CollapseOS-Web-Emulator/index.html">GitHub Pages</a>, ROM
+and one SD card filesystem are loaded automatically. When loaded from local disk, you have to load the ROM and SD card
+manually.</p>
+
+<p>The provided SD card image contains source code of all the included tools and of the kernel (ROM).</p>
+
+<p>In addition to the original <tt>ed</tt>, <tt>memt</tt> and <tt>zasm</tt> binaries, my images also include
+a convenience <tt>zmake</tt> binary - <tt>zmake foo</tt> will assemble <tt>foo/glue.asm</tt> to <tt>foo</tt> and
+will overwrite existing binaries. There is also <a href="https://github.com/schierlm/CollapseOS-Web-Emulator//tree/master/doc">a
+BASIC interpreter</a> based on <a href="https://github.com/gusmanb/tinybasic/">TinyBasic</a>, with lowercase variable/keyword
+support and added <tt>IN/OUT/PEEK/POKE/SYS</tt> commands.</p>
+
+<h2><a href="emul1.html">Emulator 1 (Simple system)</a></h2>
+<ul><li>16 KB ROM</li><li>48 KB RAM</li><li>1 SD card slot</li><li>Serial console/dumb ASCII terminal</li></ul>
+<h2><a href="emul2.html">Emulator 2 (Advanced system)</a></h2>
+<ul><li>16 KB ROM</li><li>48 KB RAM</li><li>Clock cycle counter display</li>
+<li>2 SD card slots</li><li>Serial console/dumb ASCII terminal with hex input feature</li>
+<li>Second serial port connected to ring buffer</li></ul>
+<h2><a href="emul3.html">Emulator 3 (Game console)</a></h2>
+<ul><li>16 KB ROM</li><li>48 KB RAM</li><li>1 SD card slot</li><li>256x192 pixel VDP screen</li>
+<li>Game pad input as well as Serial ASCII terminal input</li></ul>
+<h2><a href="imgtools.html">Image Tools</a></h2>
+<p>Load SD card images using CFS filesystem; add/download/rename/reorder/remove files inside; compact/optimize filesystem;
+save as uncompressed or compressed (.PNG) file.</p>
+</body>
+</html>
