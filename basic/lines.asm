@@ -53,7 +53,7 @@ GL3:
         CP 55;BUFFER & 0x0FF              ;BUT DO WE HAVE ANY?
         JR Z,GL4                        ;NO, REDO WHOLE LINE
         DEC DE                          ;YES, BACKUP POINTER
-        LD A,0x5C                        ;AND ECHO A BACK-SLASH
+        LD A,0x08                        ;AND ECHO A BACKSPACE
         CALL RST10
         JR GL1                          ;GO GET NEXT INPUT
 GL4:

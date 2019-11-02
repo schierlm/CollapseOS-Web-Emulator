@@ -75,3 +75,5 @@ PR8:
         CALL PRTNUM                     ;PRINT THE VALUE
         POP BC
         JR PR3                          ;MORE TO PRINT?
+
+.db 0,0,0,0  ; WHY DO WE NEED TO PAD HERE?
