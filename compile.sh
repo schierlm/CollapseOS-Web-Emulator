@@ -23,7 +23,7 @@ rm -rf build
 mkdir -p build/cfs/kernel build/cfs/zmake build/cfsbin
 cp -R collapseos/kernel/* build/cfs/kernel
 for dir in lib ed memt zasm; do cp -R collapseos/apps/$dir build/cfs; done
-cp -R basic build/cfs
+cp -R tbasic build/cfs
 find build -name *.md | xargs rm
 rm build/cfs/kernel/user.h.example
 mv build/cfs/kernel/err.h build/cfs
@@ -34,7 +34,7 @@ for i in 1 2 3; do
 	cp emul$i-glue.asm build/cfs/kernel.$i/glue.asm
 done
 collapseos/tools/cfspack/cfspack build/cfs >build/cfs.cfs
-for app in zasm ed memt basic kernel.1 kernel.2 kernel.3 zmake; do
+for app in zasm ed memt tbasic kernel.1 kernel.2 kernel.3 zmake; do
 	echo Building $app
 	collapseos/tools/emul/zasm/zasm build/cfs.cfs <build/cfs/$app/glue.asm >build/cfsbin/$app
 done
