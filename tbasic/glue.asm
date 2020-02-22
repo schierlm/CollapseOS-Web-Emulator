@@ -2,7 +2,6 @@
 ; see start.asm for copyright information
 ;
 ; *** Requirements ***
-; unsetZ
 ; stdioGetC
 ; stdioPutC
 ;
@@ -25,3 +24,4 @@
 .inc "tbasic/tables2.asm"
 .inc "tbasic/tables3.asm"
 .inc "tbasic/hardware.asm"
+.inc "core.asm"

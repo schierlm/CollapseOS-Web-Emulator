@@ -6,34 +6,23 @@
 ;
 ; *** Requirements ***
 ; strncmp
-; addDE
-; addHL
 ; upcase
-; unsetZ
-; intoDE
-; intoHL
-; writeHLinDE
 ; findchar
-; parseHex
-; parseHexPair
 ; blkSel
 ; blkSet
 ; fsFindFN
 ; fsOpen
 ; fsGetB
-; cpHLDE
-; parseArgs
 ; _blkGetB
 ; _blkPutB
 ; _blkSeek
 ; _blkTell
 ; printstr
-; FS_HANDLE_SIZE
-; BLOCKDEV_SIZE
 ;
 ; fsAlloc
-; fdelRaw
-; fopnRaw
+; fsFindFN
+; fsOpen
+; fsDel
 
 
 .inc "user.h"
@@ -62,49 +51,50 @@
 ; ******
 
 .inc "err.h"
-.org	USER_CODE
-
+.inc "ascii.h"
+.inc "blkdev.h"
+.inc "fs.h"
 jp	zmakeMain
 
+.inc "core.asm"
 .inc "zasm/const.asm"
 .inc "lib/util.asm"
+.inc "lib/ari.asm"
+.inc "lib/parse.asm"
 .inc "zasm/util.asm"
 .equ	IO_RAMSTART	USER_RAMSTART
 .inc "zasm/io.asm"
 .equ	TOK_RAMSTART	IO_RAMEND
 .inc "zasm/tok.asm"
-.inc "lib/parse.asm"
 .equ	INS_RAMSTART	TOK_RAMEND
 .inc "zasm/instr.asm"
 .equ	DIREC_RAMSTART	INS_RAMEND
 .inc "zasm/directive.asm"
 .inc "zasm/parse.asm"
-.inc "zasm/expr.asm"
+.equ	EXPR_PARSE	parseNumberOrSymbol
+.inc "lib/expr.asm"
 .equ	SYM_RAMSTART	DIREC_RAMEND
 .inc "zasm/symbol.asm"
 .equ	ZASM_RAMSTART	SYM_RAMEND
 .inc "zasm/main.asm"
 
 zasmArgs:
-	.db "8 9", 0
+	.db "8 9 62", 0
 zmakeSrc:
 	.db "XXXXXXXXXXXXXXXX"
 zmakeSrcBase:
 	.db "/glue.asm", 0
 zmakeMain:
-	ld de, ZASM_RAMEND+1
-	call writeHLinDE
-	ex de, hl
-	call fdelRaw
-	ex de, hl
-	push hl
+	call	fsFindFN
+	jr	nz, .notfound
+	call	fsDel
+.notfound:
 	ld a, 0xFF
 	call fsAlloc
-	ld hl, ZASM_RAMEND
 	ld a, 5
-	ld (hl), a
-	call fopnRaw
-	pop hl
+	call fsHandle
+	push de \ pop ix
+	call fsOpen
 	xor a
 	call findchar
 	ld b, a
@@ -116,13 +106,12 @@ zmakeMain:
 	ld (de), a
 	dec b
 	jr nz, .copyname
-	ld hl, ZASM_RAMEND
+	push de \ pop hl
 	ld a, 4
-	ld (hl), a
-	inc hl
-	ex de, hl
-	call writeHLinDE
-	ld hl, ZASM_RAMEND
-	call fopnRaw
+	call fsHandle
+	push de \ pop ix
+	call fsOpen
 	ld hl, zasmArgs
 	jp zasmMain
+
+USER_RAMSTART:
