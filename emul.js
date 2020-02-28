@@ -215,11 +215,13 @@ function resetCPU() {
 				if (emulKeypadKeys.indexOf("Left") == -1) result |= 0x04;
 				if (emulKeypadKeys.indexOf("Down") == -1) result |= 0x02;
 				if (emulKeypadKeys.indexOf("Up") == -1) result |= 0x01;
+				if (emulKeybuffer != "") result = 0x1F;
 				return result;
 			} else if (port == 0xDC && emulKeypadKeys !== null && emulKeypadMode == 0xDD) {
 				var result = 0;
 				if (emulKeypadKeys.indexOf("Start") == -1) result |= 0x20;
 				if (emulKeypadKeys.indexOf("A") == -1) result |= 0x10;
+				if (emulKeybuffer != "") result = 0x30;
 				return result;
 			} else {
 				console.log("Out of bounds I/O read: " + port);

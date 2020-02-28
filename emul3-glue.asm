@@ -71,7 +71,7 @@
 .inc "kernel/mmap.asm"
 
 .equ	STDIO_RAMSTART	BLOCKDEV_RAMEND
-.equ	STDIO_GETC	padGetC
+.equ	STDIO_GETC	emulGetC
 .equ	STDIO_PUTC	vdpPutC
 .inc "kernel/stdio.asm"
 
@@ -127,6 +127,22 @@ basFindCmdExtra:
 	call	basFindCmd
 	ret	z
 	jp	basPgmHook
+
+emulGetC:
+	call	padGetC
+	push	bc
+	ld	c, a
+	in	a, (STDIO_PORT)
+	or	a
+	jr	nz, .keep
+	in	a, (STDIO_PORT)
+	ld	c, a
+.keep:
+	ld	a, c
+	pop	bc
+	cp	a		; ensure Z
+	ret
+
 
 fsdevGetB:
 	ld	a, e
