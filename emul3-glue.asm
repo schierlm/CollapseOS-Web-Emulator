@@ -48,10 +48,15 @@
 .equ PAD_RAMSTART RAMSTART
 .inc "kernel/sms/pad.asm"
 
-.equ VDP_RAMSTART PAD_RAMEND
 .inc "kernel/sms/vdp.asm"
+.equ	GRID_RAMSTART	PAD_RAMEND
+.equ	GRID_COLS	VDP_COLS
+.equ	GRID_ROWS	VDP_ROWS
+.equ	GRID_SETCELL	vdpSetCell
+.equ	GRID_GETC	padGetC
+.inc "kernel/grid.asm"
 
-.equ	BLOCKDEV_RAMSTART	VDP_RAMEND
+.equ	BLOCKDEV_RAMSTART	GRID_RAMEND
 .equ	BLOCKDEV_COUNT		10
 .inc "kernel/blockdev.asm"
 ; List of devices
@@ -72,7 +77,7 @@
 
 .equ	STDIO_RAMSTART	BLOCKDEV_RAMEND
 .equ	STDIO_GETC	emulGetC
-.equ	STDIO_PUTC	vdpPutC
+.equ	STDIO_PUTC	gridPutC
 .inc "kernel/stdio.asm"
 
 .equ	FS_RAMSTART	STDIO_RAMEND
@@ -107,6 +112,7 @@ init:
 	di
 	; setup stack
 	ld	sp, 0xffff
+	call	gridInit
 	call	padInit
 	call	vdpInit
 	call	fsInit
@@ -129,7 +135,7 @@ basFindCmdExtra:
 	jp	basPgmHook
 
 emulGetC:
-	call	padGetC
+	call	gridGetC
 	push	bc
 	ld	c, a
 	in	a, (STDIO_PORT)
