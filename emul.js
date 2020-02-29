@@ -131,6 +131,15 @@ function initEmulation() {
 		vdpscreen.onkeypress = pressHandler;
 		vdpscreen.onkeydown = downHandler;
 	}
+	var gridscreen = document.getElementById("gridscreen");
+	if (gridscreen != null) {
+		for(var cell of gridscreen.querySelectorAll("td")) {
+			cell.innerHTML=" ";
+			cell.classList.remove("c");
+		}
+		gridscreen.onkeypress = pressHandler;
+		gridscreen.onkeydown = downHandler;
+	}
 	var nobgrun = document.getElementById("nobgrun");
 	if (nobgrun != null) {
 		nobgrun.disabled = false;
@@ -149,6 +158,8 @@ function resetCPU() {
 	var terminal = document.getElementById("terminal");
 	var tcontent = document.getElementById("content");
 	var vdpscreen = document.getElementById("vdpscreen");
+	var gridscreen = document.getElementById("gridscreen");
+	var gridbuf = gridscreen == null ? null : [0,0,0,0,0];
 	emulCPU = new Z80( {
 		mem_read: function(address) {
 			return emulRAM[address];
@@ -288,6 +299,15 @@ function resetCPU() {
 				}
 				emulSerial.buffer[emulSerial.end] = value;
 				emulSerial.end++;
+			} else if (port == 6 && gridbuf != null) {
+				gridbuf[0]++;
+				gridbuf[gridbuf[0]] = value;
+				if (gridbuf[0] == 4) {
+					gridbuf[0] = 0;
+					var cell = gridscreen.querySelectorAll("tr")[gridbuf[2]].childNodes[gridbuf[3]];
+					cell.innerHTML = String.fromCharCode(gridbuf[1]);
+					if (gridbuf[4] == 0) cell.classList.remove("c"); else cell.classList.add("c");
+				}
 			} else if (port == 0x3F && emulKeypadKeys !== null) {
 				emulKeypadMode = value;
 			} else if (port == 0xBF && emulVDPPatternRAM != null) { // vdp control
@@ -342,7 +362,7 @@ function resetCPU() {
 			}
 		}
 	});
-	(terminal || vdpscreen).focus();
+	(terminal || vdpscreen || gridscreen).focus();
 }
 
 function saveSDCard(index) {
@@ -475,5 +495,12 @@ window.onload = function() {
 		document.getElementById("saveserial").onclick = function() {
 			saveImageFile("serial.bin", emulSerial.buffer.subarray(emulSerial.start, emulSerial.end));
 		};
+	}
+	var gridscreen = document.getElementById("gridscreen");
+	if (gridscreen != null) {
+		var cell = "<td>#</td>", row = "", html = "";
+		for(var i = 0; i < 80; i++) row += cell;
+		for(var i=0; i<25; i++) html += "<tr>"+row+"</tr>";
+		gridscreen.innerHTML = html;
 	}
 };

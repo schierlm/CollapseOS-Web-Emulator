@@ -31,7 +31,7 @@ mv build/cfs/zasm/gluea.asm build/cfs/avra/glue.asm
 cp user.h build/cfs
 cp zmake-glue.asm build/cfs/zmake/glue.asm
 cp basic-glue.asm build/cfs/basic/glue.asm
-for i in 0 1 2 3; do
+for i in 0 1 2 3 4; do
 	mkdir build/cfs/kernel.$i
 	cp emul$i-glue.asm build/cfs/kernel.$i/glue.asm
 	echo Building kernel.$i
