@@ -89,8 +89,10 @@ zmakeMain:
 	jr	nz, .notfound
 	call	fsDel
 .notfound:
+	push hl
 	ld a, 0xFF
 	call fsAlloc
+	pop hl
 	ld a, 5
 	call fsHandle
 	push de \ pop ix
@@ -104,9 +106,9 @@ zmakeMain:
 	dec hl
 	ld a, (hl)
 	ld (de), a
-	dec b
-	jr nz, .copyname
+	djnz .copyname
 	push de \ pop hl
+	call fsFindFN
 	ld a, 4
 	call fsHandle
 	push de \ pop ix
