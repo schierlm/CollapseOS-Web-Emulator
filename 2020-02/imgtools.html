@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<head>
+<meta charset="utf-8">
+<title>Image Tools &ndash; Collapse OS Web Emulators</title>
+<style type="text/css">
+	body { font-family: Verdana, Arial, Helvetica, sans-serif; }
+	.fileinfo tt {display: inline-block; min-width: 15em; }
+	.fileinfo i {display: inline-block; min-width: 7em; }
+	.fileinfo a {text-decoration: none;}
+	.fileinfo a.reorder { cursor: move;}
+</style>
+<script type="text/javascript" src="utils.js"></script>
+<script type="text/javascript" src="imgtools.js"></script>
+</head>
+<body>
+<h1>Image Tools &ndash; <a href="index.html">Collapse OS Web Emulators</a></h1>
+<h2>Load/Save</h2>
+<p>
+<input type="file" id="loadfile" style="display: none;" accept=".png,.cfs">
+<a id="localsaveanchor" style="display: none;"></a>
+<input type="button" id="load" value="Load">
+<input type="button" id="save" value="Save">
+<input type="button" id="savepng" value="Save compressed (PNG)">
+</p>
+<h2>CFS Operations</h2>
+<div id="cfsops"></div>
+</body>
+</html>
