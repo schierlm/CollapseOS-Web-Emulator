@@ -15,21 +15,6 @@ body { font-family: Verdana, Arial, Helvetica, sans-serif; }
 </style>
 </head>
 <body>
-<div style="border: 1px solid gray; padding: 0 0 1em 1em; float:right; width: 150px; font-size: 60%">
-<h3>Device list</h3>
-<table>
-<tr><th>0</th><td>SD card</td></tr>
-<tr><th>1</th><td>File descriptor 0 (stdout)</td></tr>
-<tr><th>2</th><td>File descriptor 1 (stdin)</td></tr>
-<tr><th>3</th><td>MMAP</td></tr>
-<tr><th>4</th><td>(unused)</td></tr>
-<tr><th>5</th><td>(unused)</td></tr>
-<tr><th>6</th><td>File descriptor 2</td></tr>
-<tr><th>7</th><td>File descriptor 3</td></tr>
-<tr><th>8</th><td>File descriptor 4</td></tr>
-<tr><th>9</th><td>File descriptor 5</td></tr>
-</table>
-</div>
 <h1>Emulator 3 (Game console) &ndash; <a href="index.html">Collapse OS Web Emulators</a></h1>
 <h2>CPU/ROM</h2>
 <p><span id="romstatus">No ROM loaded.</span>
@@ -40,7 +25,7 @@ body { font-family: Verdana, Arial, Helvetica, sans-serif; }
 <h2>SD Card</h2>
 <p>
 <a id="localsaveanchor" style="display: none;"></a>
-<input type="file" id="cfsfile" data-autoload="sdcard.png" style="display: none;" accept=".png,.cfs">
+<input type="file" id="cfsfile" data-autoload="sdcard.png" style="display: none;" accept=".png,.bfs">
 <input type="button" id="loadcfsauto" value="Load from autosave" disabled>
 <input type="button" id="loadcfs" value="Load from file">
 <input type="button" id="savecfs" value="Save to file">

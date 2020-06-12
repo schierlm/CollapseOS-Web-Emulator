@@ -134,7 +134,7 @@ function initEmulation() {
 	var gridscreen = document.getElementById("gridscreen");
 	if (gridscreen != null) {
 		for(var cell of gridscreen.querySelectorAll("td")) {
-			cell.innerHTML=" ";
+			cell.innerText="\uFEFF ";
 			cell.classList.remove("c");
 		}
 		gridscreen.onkeypress = pressHandler;
@@ -159,7 +159,9 @@ function resetCPU() {
 	var tcontent = document.getElementById("content");
 	var vdpscreen = document.getElementById("vdpscreen");
 	var gridscreen = document.getElementById("gridscreen");
-	var gridbuf = gridscreen == null ? null : [0,0,0,0,0];
+	var gridbuf = gridscreen == null ? null : [0,0];
+	var gridscroll = document.getElementById("gridscroll");
+	var scrollback = document.getElementById("scrollback");
 	emulCPU = new Z80( {
 		mem_read: function(address) {
 			return emulRAM[address];
@@ -188,28 +190,16 @@ function resetCPU() {
 					emulKeybuffer = emulKeybuffer.substring(1);
 					return ch;
 				}
-			} else if (port == 1 || port == 3) {
-				var card = emulSDCARDs[port == 3 ? 1 : 0];
+			} else if (port == 4 || port == 14) {
+				var card = emulSDCARDs[port == 14 ? 1 : 0];
 				if (card.level != 0) {
 					console.log("Reading FSDEV in the middle of an addr op: "+card.ptr);
 					return 0;
 				}
 				if (card.ptr >= 0x1000000)
 					console.log("Out of bounds SD card read at "+card.ptr);
-				return card.ptr < card.data.length ? card.data[card.ptr] : 0;
-
-			} else if (port == 2 || port == 4) {
-				var card = emulSDCARDs[port == 4 ? 1 : 0];
-				if (card.level != 0) {
-					return 3;
-				} else if (card.ptr > 0x1000000) {
-					return 2;
-				} else if (card.ptr == 0x1000000) {
-					return 1;
-				} else {
-					return 0;
-				}
-			} else if (port == 5 && emulSerial.buffer != null) {
+				return card.ptr < card.data.length ? card.data[card.ptr++] : 0;
+			} else if (port == 15 && emulSerial.buffer != null) {
 				if (emulSerial.start == emulSerial.end)
 					return 0;
 				var sbyte = emulSerial.buffer[emulSerial.start];
@@ -251,43 +241,77 @@ function resetCPU() {
 				} else if (value == 10) {
 					tcontentold.innerHTML +=tcontent.innerHTML+"<br>";
 					tcontent.innerText="";
+					terminal.scrollTop = terminal.scrollHeight;
 				} else if (value != 13) {
 					tcontent.innerText += String.fromCharCode(value);
-					terminal.scrollTop = terminal.scrollHeight;
 				}
-			} else if (port == 1 || port == 3) {
-				var card = emulSDCARDs[port == 3 ? 1 : 0];
+			} else if (port == 0 && gridbuf != null) {
+				var cell = gridscreen.querySelectorAll("tr")[gridbuf[0]].childNodes[gridbuf[1]];
+				cell.classList.remove("c");
+				if (value == 8) {
+					gridbuf[1]--;
+					if (gridbuf[1] == -1) gridbuf[1] = 0;
+				} else if (value == 10) {
+					cell.innerText= ' ';
+					gridbuf[1] = 80;
+				} else if (value != 13) {
+					cell.innerText = "\uFEFF"+String.fromCharCode(value);
+					gridbuf[1]++;
+				}
+				if (gridbuf[1] == 80) {
+					gridbuf[0]++;
+					gridbuf[1] = 0;
+					if (gridbuf[0] == 25) {
+						gridbuf[0]--;
+						var firstRow = gridscreen.querySelector("tr");
+						firstRow.parentNode.appendChild(firstRow);
+						for(var i = 0; i < 80; i++) {
+							if (scrollback != null) {
+								scrollback.innerHTML += firstRow.childNodes[i].innerHTML.replace("\uFEFF","");
+							}
+							firstRow.childNodes[i].innerText = "\uFEFF ";
+						}
+						if (scrollback != null) {
+							scrollback.innerHTML += "<br>";
+						}
+						if (gridscroll != null) {
+							gridscroll.scrollTop = gridscroll.scrollHeight;
+						}
+					}
+				}
+				var cell = gridscreen.querySelectorAll("tr")[gridbuf[0]].childNodes[gridbuf[1]];
+				cell.innerHTML = ' ';
+				cell.classList.add("c");
+			} else if (port == 4 || port == 14) {
+				var card = emulSDCARDs[port == 14 ? 1 : 0];
 				if (card.level != 0) {
 					console.log("Writing to FSDEV in the middle of an addr op:" + card.ptr);
 					return;
 				}
 				if (card.ptr < card.used) {
-					card.data[card.ptr] = value;
+					card.data[card.ptr++] = value;
 				} else if (card.ptr < 0x1000000) {
 					card.used = card.ptr + 1;
 					var size=1;
 					while (size < card.used) size *= 2;
 					card.data = resizeUint8Array(card.data, size);
-					card.data[card.ptr] = value;
+					card.data[card.ptr++] = value;
 				} else {
 					console.log("Out of bounds FSDEV write at "+card.ptr);
 				}
 				if (card.autosave) {
-					autosaveSDCard(port == 3 ? 1 : 0);
+					autosaveSDCard(port == 14 ? 1 : 0);
 				}
-			} else if (port == 2 || port == 4) {
-				var card = emulSDCARDs[port == 4 ? 1 : 0];
+			} else if (port == 3 || port == 13) {
+				var card = emulSDCARDs[port == 13 ? 1 : 0];
 				if (card.level == 0) {
-					card.ptr = value << 16;
+					card.ptr = value << 18;
 					card.level = 1;
 				} else if (card.level == 1) {
-					card.ptr |= value << 8;
-					card.level = 2;
-				} else {
-					card.ptr |= value;
+					card.ptr |= value << 10;
 					card.level = 0;
 				}
-			} else if (port == 5 && emulSerial.buffer != null) {
+			} else if (port == 15 && emulSerial.buffer != null) {
 				if (emulSerial.end == emulSerial.buffer.length) {
 					if (emulSerial.start != 0) {
 						emulSerial.buffer.copyWithin(0, emulSerial.start, emulSerial.end);
@@ -299,15 +323,16 @@ function resetCPU() {
 				}
 				emulSerial.buffer[emulSerial.end] = value;
 				emulSerial.end++;
-			} else if (port == 6 && gridbuf != null) {
-				gridbuf[0]++;
-				gridbuf[gridbuf[0]] = value;
-				if (gridbuf[0] == 4) {
-					gridbuf[0] = 0;
-					var cell = gridscreen.querySelectorAll("tr")[gridbuf[2]].childNodes[gridbuf[3]];
-					cell.innerHTML = String.fromCharCode(gridbuf[1]);
-					if (gridbuf[4] == 0) cell.classList.remove("c"); else cell.classList.add("c");
-				}
+			} else if ((port == 5 || port == 6) && tcontent != null) {
+				tcontentold.innerHTML += tcontent.innerHTML + '<span style="background-color: black; border: 1px dashed yellow;">@'+(port==5 ? 'X':'Y')+"="+value+"</span>";
+				tcontent.innerText = "";
+				terminal.scrollTop = terminal.scrollHeight;
+			} else if ((port == 5 || port == 6) && gridbuf != null) {
+				var cell = gridscreen.querySelectorAll("tr")[gridbuf[0]].childNodes[gridbuf[1]];
+				cell.classList.remove("c");
+				gridbuf[6-port] = value;
+				var cell = gridscreen.querySelectorAll("tr")[gridbuf[0]].childNodes[gridbuf[1]];
+				cell.classList.add("c");
 			} else if (port == 0x3F && emulKeypadKeys !== null) {
 				emulKeypadMode = value;
 			} else if (port == 0xBF && emulVDPPatternRAM != null) { // vdp control
@@ -369,7 +394,7 @@ function saveSDCard(index) {
 	if (emulSDCARDs[index].data.length > emulSDCARDs[index].used) {
 		emulSDCARDs[index].data = resizeUint8Array(emulSDCARDs[index].data, emulSDCARDs[index].used);
 	}
-	saveImageFile("filesystem.cfs", emulSDCARDs[index].data);
+	saveImageFile("filesystem.bfs", emulSDCARDs[index].data);
 }
 
 function autosaveSDCard(index) {
@@ -502,5 +527,11 @@ window.onload = function() {
 		for(var i = 0; i < 80; i++) row += cell;
 		for(var i=0; i<25; i++) html += "<tr>"+row+"</tr>";
 		gridscreen.innerHTML = html;
+	}
+	var gridscroll = document.getElementById("gridscroll");
+	var scrollback = document.getElementById("scrollback");
+	if (gridscroll != null && scrollback != null) {
+		scrollback.style.width = gridscreen.offsetWidth+"px";
+		gridscroll.style.height = gridscreen.offsetHeight+"px";
 	}
 };
