@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<head>
+<meta charset="utf-8">
+<title>Forth Bootstrap &ndash; Collapse OS Web Emulators</title>
+<style type="text/css">
+	body { font-family: Verdana, Arial, Helvetica, sans-serif; }
+	.fileinfo tt {display: inline-block; min-width: 15em; }
+	.fileinfo i {display: inline-block; min-width: 7em; }
+	.fileinfo a {text-decoration: none;}
+	.fileinfo a.reorder { cursor: move;}
+</style>
+<style type="text/css">
+.cursor {color: red;}
+progress, textarea { width: 85%;}
+label.lbuf {float:left; width: 10%;}
+.clear {clear:left;}
+#terminal { clear: both; display: block; border: 1px solid #0000FF; margin 1em; padding: 1px; background-color: #666; color: #00FF00; height: 400px; overflow-y: scroll;}
+</style>
+<script type="text/javascript" src="../utils.js"></script>
+<script type="text/javascript" src="../forthvm.js"></script>
+<script type="text/javascript" src="bootstrap.js"></script>
+</head>
+<body>
+<h1>Forth Bootstrap &ndash; <a href="index.html">Collapse OS Web Emulators</a></h1>
+<h2>CPU/ROM</h2>
+<p><span id="romstatus">No ROM loaded.</span>
+<a id="localsaveanchor" style="display: none;"></a>
+<input type="file" id="romfile" data-autoload="emul0.png" style="display: none;" accept=".png,.rom">
+<input type="button" id="loadrom" value="Load from file">
+<input type="button" id="saverom" value="Save to file">
+</p>
+<div id="consolewrapper" style="display:none">
+<h2>Console</h2>
+<pre id="terminal" tabindex="0"><span id="contentold">(output will appear here)<br><br></span><span id="content"></span><span class="cursor">_</span></pre>
+</div>
+<h2>Bootstrap script</h2>
+<p><input type="button" id="stage1" value="Stage 1"> <input type="button" id="stage2" value="Stage 2"> <input type="button" id="stage2c" value="Stage 2 (with console)">
+<span id="bootprogress"></span></p>
+<progress id="progressbar" value=0 max=1></progress>
+<p><textarea  id="codetext" cols=70 rows=20 wrap="off" style="overflow: scroll"></textarea></p>
+</body>
+</html>
