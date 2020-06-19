@@ -1,9 +1,8 @@
-var emulRAM = new Uint8Array(0x10000), emulROM = new Uint8Array(0);
-var emulRAM = new Uint8Array(0x10000), emulROM = new Uint8Array(0);
+var emulROM = new Uint8Array(0);
 var emulSDCARDs = [{data: new Uint8Array(0), used: 0, autosave: false, level: 0, ptr: 0},
 	{data: new Uint8Array(0), used: 0, autosave: false, level: 0, ptr: 0}];
 var emulSerial = { buffer: null, start: 0, end: 0};
-var emulCPU = null, emulWaitCount = 0, emulInitialized = false;
+var emulWaitCount = 0, emulInitialized = false;
 var emulKeybuffer = "", emulKeybufferSend = false, emulKeypadKeys = null, emulKeypadMode = 0;
 var emulVDPPatternRAM = null, emulVDPLowByte = null, emulVDPAddress = -1, emulCycles = 0;
 var emulInterval = "", emulCycleUpdateTimeout = null;
@@ -11,7 +10,7 @@ var emulInterval = "", emulCycleUpdateTimeout = null;
 function runCPU() {
 	emulWaitCount = emulInterval == "" ? 1 : 5;
 	for(var i=0; i < 10000 && emulWaitCount > 0; i++) {
-		emulCycles += emulCPU.run_instruction();
+		emulCycles += stepVM();
 	}
 	if (emulWaitCount > 0) setTimeout(runCPU, 1);
 	if (emulCycleUpdateTimeout != null) {
@@ -151,8 +150,6 @@ function initEmulation() {
 function resetCPU() {
 	if (emulROM.length == 0 || emulROM.length > 0x4000)
 		return;
-	emulRAM.fill(0);
-	emulRAM.subarray(0, emulROM.length).set(emulROM);
 	if (!emulInitialized)
 		initEmulation();
 	var terminal = document.getElementById("terminal");
@@ -162,20 +159,7 @@ function resetCPU() {
 	var gridbuf = gridscreen == null ? null : [0,0];
 	var gridscroll = document.getElementById("gridscroll");
 	var scrollback = document.getElementById("scrollback");
-	emulCPU = new Z80( {
-		mem_read: function(address) {
-			return emulRAM[address];
-		},
-
-		mem_write: function(address, value) {
-			if (address < 0x4000) {
-				console.log("Attempting to write to ROM at " + address);
-			} else {
-				emulRAM[address] = value;
-			}
-		},
-
-		io_read: function(port) {
+	var ioRead = function (port) {
 			port = port & 0xff;
 			if (port == 0) {
 				if (emulKeybuffer == "") {
@@ -229,9 +213,8 @@ function resetCPU() {
 				emulWaitCount--;
 				return 0;
 			}
-		},
-
-		io_write: function(port, value) {
+	};
+	var ioWrite = function(port, value) {
 			port = port & 0xff;
 			if (port == 0 && tcontent != null) {
 				if (value == 8) {
@@ -385,8 +368,8 @@ function resetCPU() {
 			} else {
 				console.log("Out of bounds I/O write: "+ port);
 			}
-		}
-	});
+	};
+	initVM(emulROM, ioRead, ioWrite);
 	(terminal || vdpscreen || gridscreen).focus();
 }
 
