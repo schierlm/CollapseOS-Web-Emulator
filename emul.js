@@ -506,7 +506,7 @@ window.onload = function() {
 	}
 	var gridscreen = document.getElementById("gridscreen");
 	if (gridscreen != null) {
-		var cell = "<td>#</td>", row = "", html = "";
+		var cell = "<td>\uFEFF#</td>", row = "", html = "";
 		for(var i = 0; i < 80; i++) row += cell;
 		for(var i=0; i<25; i++) html += "<tr>"+row+"</tr>";
 		gridscreen.innerHTML = html;

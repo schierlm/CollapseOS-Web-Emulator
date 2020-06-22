@@ -5,8 +5,15 @@ function initForthState(ioRead, ioWrite, bootstrapping) {
 	var ppush = function(state, value) { state.writeWord(state.psp, value); state.psp-=2;};
 	var rpop = function(state) {state.rsp-=2; return state.readWord(state.rsp+2);};
 	var rpush = function(state, value) { state.rsp+=2; state.writeWord(state.rsp, value); };
-	var chkps = function(state) { if (state.psp <= state.rsp) throw "stack overflow"; };
 	var builtin = function (name, func) { if (bootstrapping) { func.funcname = name; } return func; };
+
+	var chkps = function(state) {
+		if (state.psp <= state.rsp)  {
+			throw {type: "ForthStack", func: "(oflw)"};
+		} else if (state.rsp < RS_ADDR || state.psp > PS_ADDR) {
+			throw {type: "ForthStack", func: "(uflw)"};
+		}
+	};
 
 	var builtin2 = function(name, func) {
 		return builtin(name, function(fs) { var b = ppop(fs), a = ppop(fs); chkps(fs); ppush(fs, func(a,b) | 0); });
@@ -56,15 +63,22 @@ function initForthState(ioRead, ioWrite, bootstrapping) {
 		if (type == 2 || type == 3) { ppush(state, pfa); }
 		if (type == 1 || type == 3) { rpush(state, state.ir); state.ir = type == 1 ? pfa : state.readWord(pfa+2); }
 		chkps(state);
-		if (state.rsp < RS_ADDR)
-			state.ir = wordInsnAddr(state, "(uflw)");
 	};
 
 	var stepFunc = function(state) {
-		if (state.ir == -1) return;
-		var addr = state.readWord(state.ir);
-		state.ir += 2;
-		executeFunc(state, addr);
+		try {
+			if (state.ir == -1) return;
+			var addr = state.readWord(state.ir);
+			state.ir += 2;
+			executeFunc(state, addr);
+		} catch (e) {
+			if (e.type == "ForthStack") {
+				state.ir = wordInsnAddr(state, e.func); state.psp = PS_ADDR; state.rsp = RS_ADDR;
+			} else {
+				alert(e);
+				throw e;
+			}
+		}
 	}
 
 	if (bootstrapping) {

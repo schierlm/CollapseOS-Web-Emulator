@@ -115,17 +115,12 @@ H@ XCURRENT !        ( set current tip of dict, 0x42 )
 : 2+ 1+ 1+ ;
 : 2- 1- 1- ;
 
-( 50 JSCODE 0
-51 JSCODE 1
-52 JSCODE -1
-53 JSCODE 2+
-54 JSCODE 2- TODO )
-
-
 353 LOAD  ( xcomp core low #=3531 #=354 #=355 #=356 )
 ( #=357 #=358 #=359 #=360 #=361 #=362 #=363 #=364 #=365 )
 ( #=366 #=367 #=369 #=370 #=371 #=372 #=373 #=374 #=376 )
 ( #=377 #=378 )
+
+: (oflw) LIT" stack overflow" ERR ;
 
 : _currdisk [ RAMSTART 0x70 + LITN ] ;
 : (emit) 0 PC! ;
