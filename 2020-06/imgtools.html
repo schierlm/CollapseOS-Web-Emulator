@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<head>
+<meta charset="utf-8">
+<title>Image Tools &ndash; Collapse OS Web Emulators</title>
+<style type="text/css">
+	body { font-family: Verdana, Arial, Helvetica, sans-serif; }
+</style>
+<script type="text/javascript" src="utils.js"></script>
+<script type="text/javascript" src="imgtools.js"></script>
+</head>
+<body>
+<h1>Image Tools &ndash; <a href="index.html">Collapse OS Web Emulators</a></h1>
+<div style="float:left; background-color: #ddd; margin: 0em 1em 1em 0em ; padding: 0em 1em 1em 1em;">
+<h2>Load/Save</h2>
+<p>
+<input type="file" id="loadfile" style="display: none;" accept=".png,.bfs">
+<a id="localsaveanchor" style="display: none;"></a>
+<input type="button" id="load" value="Load">
+<input type="button" id="save" value="Save">
+<input type="button" id="savepng" value="Save compressed (PNG)">
+</p>
+<h2>Edit block</h2>
+<p><input type="text" id="blocknumber" value="0"><input type="button" id="saveblock" value="Save"><input type="button" id="loadblock" value="Load"></p>
+<p><textarea  id="blocktext" rows=16 cols=70 wrap="off" style="overflow: scroll"></textarea></p>
+</div>
+<h2>Existing blocks</h2>
+<p id="blocklist"></p>
+</body>
+</html>

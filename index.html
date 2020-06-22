@@ -14,20 +14,41 @@ body { font-family: Verdana, Arial, Helvetica, sans-serif; }
 <p>Based on <a href="https://github.com/DrGoldfire/Z80.js">a Z80 JavaScript emulator</a>, this project aims to emulate
 <a href="https://collapseos.org/">CollapseOS</a> within your browser.</p>
 
-<p>There are three emulators with different built-in (virtual) hardware available, as well as a tool to edit virtual SD cards that use
-the CFS filesystem.</p>
+<p>Since the 2020-06 version (which is implemented in Forth), you also have the option to emulate the ForthVM directly in JavaScript,
+instead of emulating the Z80 ForthVM in <code>Z80.js</code>.</p>
+
+<p>There are various emulators with different built-in (virtual) hardware available, as well as a tool to edit virtual SD cards that use
+the CFS or BFS filesystem.</p>
 
 <p>When loading this from <a href="https://schierlm.github.io/CollapseOS-Web-Emulator/index.html">GitHub Pages</a>, ROM
 and one SD card filesystem are loaded automatically. When loaded from local disk, you have to load the ROM and SD card
 manually.</p>
 
-<p>The provided SD card image contains source code of all the included tools and of the kernel (ROM).</p>
+<p>For 2020-02 and older, the provided SD card image contains source code of all the included tools and of the kernel (ROM).
+For newer versions, the SD Card is a direct copy of the Block filesystem without any modifications.</p>
 
-<p>In addition to the original <tt>ed</tt>, <tt>memt</tt> and <tt>zasm</tt> binaries, my images also include
+<p>For 2020-02 and earlier, in addition to the original <tt>ed</tt>, <tt>memt</tt> and <tt>zasm</tt> binaries, my images also include
 a convenience <tt>zmake</tt> binary - <tt>zmake foo</tt> will assemble <tt>foo/glue.asm</tt> to <tt>foo</tt> and
 will overwrite existing binaries. There is also <a href="https://github.com/schierlm/CollapseOS-Web-Emulator/tree/master/basic">a
 BASIC interpreter</a> based on <a href="https://github.com/gusmanb/tinybasic/">TinyBasic</a>, with lowercase variable/keyword
 support and added <tt>IN/OUT/PEEK/POKE/SYS</tt> commands.</p>
+
+<h2>June 2020 version</h2>
+<h3><a href="2020-06/emul1.html">Emulator 1 (Simple system)</a></h3>
+<ul><li>Z80 CPU</li><li>16 KB ROM</li><li>48 KB RAM</li><li>1 SD card slot</li><li>Serial console/dumb ASCII terminal</li></ul>
+<h3><a href="2020-06/emul2.html">Emulator 2 (Advanced system)</a></h3>
+<ul><li>Z80 CPU</li><li>16 KB ROM</li><li>48 KB RAM</li><li>Clock cycle counter display</li>
+<li>2 SD card slots</li><li>Serial console/dumb ASCII terminal with hex input feature</li>
+<li>Second serial port connected to ring buffer</li></ul>
+<h3><a href="2020-06/emul3.html">Emulator 3 (Game console)</a></h3>
+<ul><li>Z80 CPU</li><li>16 KB ROM</li><li>48 KB RAM</li><li>1 SD card slot</li><li>256x192 pixel VDP screen</li>
+<li>Game pad input as well as Serial ASCII terminal input</li></ul>
+<h3><a href="2020-06/emul4.html">Emulator 4 (Grid display)</a></h3>
+<ul><li>Z80 CPU</li><li>16 KB ROM</li><li>48 KB RAM</li><li>1 SD card slot</li><li>Serial input/80x25 grid display with scrollback buffer</li></ul>
+<h3><a href="2020-06/emul0.html">Emulator 0 (Javascript Forth)</a></h3>
+<ul><li>No ROM</li><li>64 KB RAM</li><li>2 SD card slots</li><li>Serial input/80x25 grid display with scrollback buffer and hex input feature</li><li>Second serial port connected to ring buffer</li></ul>
+<h3><a href="2020-06/imgtools.html">Image Tools</a></h3>
+<p>Load SD card images using BFS filesystem; edit blocks inside; save as uncompressed or compressed (.PNG) file.</p>
 
 <h2>February 2020 version</h2>
 <h3><a href="2020-02/emul1.html">Emulator 1 (Simple system)</a></h3>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<head>
+<meta charset="utf-8">
+<title>Emulator 0 (Javascript Forth) &ndash; Collapse OS Web Emulators</title>
+<script type="text/javascript" src="utils.js"></script>
+<script type="text/javascript" src="emul.js"></script>
+<script type="text/javascript" src="forthvm.js"></script>
+<style type="text/css">
+body { font-family: Verdana, Arial, Helvetica, sans-serif; }
+.cursor {color: red;}
+input#buffer { width: 85%;}
+input#buffer, input#hexbuffer { float: left; width: 85%;}
+label.lbuf {float:left; width: 10%;}
+.clear {clear:left;}
+div#gridscroll { overflow-y: auto; display: inline-block; }
+pre#scrollback { display: block; background-color: #666; color: #00FF00; margin: 0em; }
+table#gridscreen {border-collapse: collapse; border: 1px solid #0000FF; margin 1em; }
+table#gridscreen tr td { width: 1ch; height: 1em; font-family: monospace; border: 1px solid #333; background-color: #666; color: #0f0; }
+table#gridscreen tr td.c { color: #ff0; background-color: #00f;}
+</style>
+</head>
+<body>
+<h1>Emulator 0 (Javascript Forth) &ndash; <a href="index.html">Collapse OS Web Emulators</a></h1>
+<h2>CPU/ROM</h2>
+<p><span id="romstatus">No ROM loaded.</span>
+<input type="file" id="romfile" data-autoload="emul0.png" style="display: none;" accept=".png,.rom">
+<input type="button" id="loadrom" value="Load ROM (and Reset CPU)">
+<input type="button" id="resetcpu" value="Reset CPU">
+</p>
+<h2>First SD Card</h2>
+<p>
+<a id="localsaveanchor" style="display: none;"></a>
+<input type="file" id="cfsfile" data-autoload="sdcard.png" style="display: none;" accept=".png,.bfs">
+<input type="button" id="loadcfsauto" value="Load from autosave" disabled>
+<input type="button" id="loadcfs" value="Load from file">
+<input type="button" id="savecfs" value="Save to file">
+<label><input type="checkbox" id="autosavecfs"> Autosave (local storage in browser)</label>
+</p>
+<h2>Second SD Card</h2>
+<p>Use the <tt>SELDISK</tt> command to choose first (0) or second (1) SD card</p>
+<p>
+<input type="file" id="cfsfile2" style="display: none;" accept=".png,.bfs">
+<input type="button" id="loadcfs2" value="Load from file">
+<input type="button" id="savecfs2" value="Save to file">
+</p>
+<h2>Serial Port Buffer</h2>
+<p><span id="serialsize">0</span> bytes in serial port buffer.
+<input type="file" id="serialfile" style="display: none;" accept=".bin">
+<input type="button" id="loadserial" value="Load from file">
+<input type="button" id="saveserial" value="Save to file">
+</p>
+<h2>Console</h2>
+<div id="gridscroll">
+<pre id="scrollback"></pre>
+<table id="gridscreen" tabindex="0"></table>
+</div>
+
+<p>In case you want to pre-write or paste your text, or are on a mobile device:</p>
+<label class="lbuf" for="buffer">Text buffer:</label><input type="text" id="buffer" name="buffer" value="" disabled><br class="clear">
+<label class="lbuf" for="buffer">Hex buffer:</label><input type="text" id="hexbuffer" name="hexbuffer" value="" pattern="([0-9A-F]{2}( [0-9A-F]{2})*)?" disabled><br class="clear">
+<p>Hit Enter on an empty field to insert a line break.</p>
+</body>
+</html>
