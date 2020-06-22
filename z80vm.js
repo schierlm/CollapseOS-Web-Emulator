@@ -16,7 +16,7 @@ function initVM(rom, ioRead, ioWrite) {
 			}
 		},
 		io_read: ioRead,
-		io_write: ioWrite
+		io_write: function(port, value) { ioWrite(port, value, emulRAM); }
 	});
 }
 

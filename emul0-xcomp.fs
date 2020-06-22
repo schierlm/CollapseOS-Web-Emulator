@@ -27,15 +27,16 @@ H@ ORG !
 ( start here for pass 1 bootstrap ###P1### )
 
 0 A,, ( 0x00 = fill LATEST )
-0 A,, 0 A,, 0 A,, 0 A,, 0 A,, 0 A,, 0 A,,
+0 A,, ( 0x02 = fill (oflw) )
+0 A,, ( 0x04 = fill BOOT )
+0 A,, ( 0x06 = fill (uflw) )
+0 A,, 0 A,, 0 A,, 0 A,,
 
 0 A,, ( 0x10 )
 0 A,, 0 A,, 0 A,, 0 A,, 0 A,, 0 A,, 0 A,,
 
-4 A, 0 A, ( 0x20 = numberWord )
-6 A, 0 A, ( 0x22 = litWord )
-5 A, 0 A, ( 0x24 = addrWor )
-0 A,, 0 A,, 0 A,, 0 A,, 0 A,,
+0 A,, ( 0x20 )
+0 A,, 0 A,, 0 A,, 0 A,, 0 A,, 0 A,, 0 A,,
 
 0 A,, ( 0x30 )
 0 A,, 0 A,, 0 A,, 0 A,, 0 A,
@@ -121,22 +122,24 @@ H@ XCURRENT !        ( set current tip of dict, 0x42 )
 ( #=377 #=378 )
 
 : (oflw) LIT" stack overflow" ERR ;
+XCURRENT @ _xapply ORG @ 0x02 ( stable ABI oflw ) + !
 
 : _currdisk [ RAMSTART 0x70 + LITN ] ;
 : (emit) 0 PC! ;
 : (key) BEGIN 0 PC@ 0 = UNTIL 0 PC@ ;
 : EFS@
-    256 /MOD 3 _currdisk C@ + PC! 3 _currdisk C@ + PC!
-    1024 0 DO
-        4 _currdisk C@ + PC@
-        BLK( I + C!
-    LOOP
+    1 3 _currdisk C@ + PC! ( read )
+    256 /MOD 3 _currdisk C@ + PC!
+        3 _currdisk C@ + PC! ( blkid )
+    BLK( 256 /MOD 3 _currdisk C@ + PC!
+        3 _currdisk C@ + PC! ( dest )
 ;
 : EFS!
-    256 /MOD 3 _currdisk C@ + PC! 3 _currdisk C@ + PC!
-    1024 0 DO
-        BLK( I + C@ 4 _currdisk C@ + PC!
-    LOOP
+    2 3 _currdisk C@ + PC! ( write )
+    256 /MOD 3 _currdisk C@ + PC!
+        3 _currdisk C@ + PC! ( blkid )
+    BLK( 256 /MOD 3 _currdisk C@ + PC!
+        3 _currdisk C@ + PC! ( dest )
 ;
 : SELDISK 0 = IF 0 ELSE 10 THEN _currdisk C! ;
 : SERIAL@ 15 PC@ ;

@@ -9,9 +9,9 @@ function initForthState(ioRead, ioWrite, bootstrapping) {
 
 	var chkps = function(state) {
 		if (state.psp <= state.rsp)  {
-			throw {type: "ForthStack", func: "(oflw)"};
+			throw {type: "ForthStack", funcptr: 0x02}; // (oflw)
 		} else if (state.rsp < RS_ADDR || state.psp > PS_ADDR) {
-			throw {type: "ForthStack", func: "(uflw)"};
+			throw {type: "ForthStack", funcptr: 0x06}; // (uflw)
 		}
 	};
 
@@ -39,20 +39,15 @@ function initForthState(ioRead, ioWrite, bootstrapping) {
 		return 0;
 	}
 
-	var wordInsnAddr = function(state, word) {
-		var current = findFunc(state, state.readWord(RAMSTART+02), word);
-		if (current != 0) {
-			if (state.ram[current] != 1) throw "word must be compiledWord";
-			return current + 1;
-		}
-		throw word + " word not found";
+	var wordInsnPtrAddr = function(state, wordptr) {
+		return state.readWord(wordptr) + 1;
 	};
 
 	var mainFunc = function(state) {
 		state.psp = PS_ADDR; state.rsp = RS_ADDR;
 		state.writeWord(RAMSTART+0x02, state.readWord(0x0000)); // CURRENT = LATEST
 		state.writeWord(RAMSTART+0x04, RAMSTART+0x80); // HERE = RAMSTART + 0x80
-		state.ir = wordInsnAddr(state, "BOOT");
+		state.ir = wordInsnPtrAddr(state, 0x04); // BOOT
 	};
 
 	var executeFunc = function(state, addr) {
@@ -73,7 +68,7 @@ function initForthState(ioRead, ioWrite, bootstrapping) {
 			executeFunc(state, addr);
 		} catch (e) {
 			if (e.type == "ForthStack") {
-				state.ir = wordInsnAddr(state, e.func); state.psp = PS_ADDR; state.rsp = RS_ADDR;
+				state.ir = wordInsnPtrAddr(state, e.funcptr); state.psp = PS_ADDR; state.rsp = RS_ADDR;
 			} else {
 				alert(e);
 				throw e;
@@ -153,7 +148,7 @@ function initForthState(ioRead, ioWrite, bootstrapping) {
 			builtin("@", function(fs) { var addr = ppop(fs); chkps(fs), ppush(fs, fs.readWord(addr)); }),
 			builtin("C!", function(fs) { var addr = ppop(fs), val = ppop(fs); fs.ram[addr] = val; }),
 			builtin("C@", function(fs) { var addr = ppop(fs); chkps(fs), ppush(fs, fs.ram[addr]); }),
-			builtin("PC!", function(fs) { var port = ppop(fs), val = ppop(fs); ioWrite(port, val); }),
+			builtin("PC!", function(fs) { var port = ppop(fs), val = ppop(fs); ioWrite(port, val, fs.ram); }),
 			builtin("PC@", function(fs) { var port = ppop(fs); chkps(fs), ppush(fs, ioRead(port)); }),
 			builtin("I", function(fs) { ppush(fs, fs.readWord(fs.rsp)); }),
 			builtin("I'", function(fs) { ppush(fs, fs.readWord(fs.rsp-2)); }),
@@ -206,7 +201,7 @@ function initForthState(ioRead, ioWrite, bootstrapping) {
 				var idx = ppop(fs);
 				var addr = fs.psp + 2 + idx * 2;
 				if (addr > PS_ADDR) {
-					fs.ir = wordInsnAddr(fs, "(uflw)");
+					fs.ir = wordInsnPtrAddr(fs, 0x06); // (uflw)
 				} else {
 					ppush(fs, fs.readWord(addr));
 				}

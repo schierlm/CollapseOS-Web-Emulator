@@ -290,6 +290,9 @@ var nFuncs = {
 	"XCURRENT_!": function(state) {
 		state.xcomp.current = state.main.ppop(state);
 	},
+	"XCURRENT-@-_xapply": function(state) {
+		state.main.ppush(state, state.xcomp.current);
+	},
 	"(entry)": function(state) {
 		var name = readWord();
 		for(var i=0; i<name.length; i++) {
@@ -357,7 +360,7 @@ function bootstrapStage1() {
 	console.time("Bootstrap");
 	try {
 		statusLen = 0;
-		scriptBuffer = document.getElementById("codetext").value.replace(/\r|\n|\t/g, " ").replace("H@ XCURRENT !", "H@ XCURRENT_!")+" ";
+		scriptBuffer = document.getElementById("codetext").value.replace(/\r|\n|\t/g, " ").replace("H@ XCURRENT !", "H@ XCURRENT_!").replace(/XCURRENT @ _xapply/g, "XCURRENT-@-_xapply")+" ";
 		if (scriptBuffer.indexOf("###P1### )") != -1)
 			scriptBuffer = scriptBuffer.substring(scriptBuffer.indexOf("###P1### )") + 10);
 		scriptPos = 0;

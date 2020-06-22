@@ -12,17 +12,18 @@
 : (emit) 0 PC! ;
 : (key) BEGIN 0 PC@ 0 = UNTIL 0 PC@ ;
 : EFS@
-    256 /MOD 3 _currdisk C@ + PC! 3 _currdisk C@ + PC!
-    1024 0 DO
-        4 _currdisk C@ + PC@
-        BLK( I + C!
-    LOOP
+    1 3 _currdisk C@ + PC! ( read )
+    256 /MOD 3 _currdisk C@ + PC!
+        3 _currdisk C@ + PC! ( blkid )
+    BLK( 256 /MOD 3 _currdisk C@ + PC!
+        3 _currdisk C@ + PC! ( dest )
 ;
 : EFS!
-    256 /MOD 3 _currdisk C@ + PC! 3 _currdisk C@ + PC!
-    1024 0 DO
-        BLK( I + C@ 4 _currdisk C@ + PC!
-    LOOP
+    2 3 _currdisk C@ + PC! ( write )
+    256 /MOD 3 _currdisk C@ + PC!
+        3 _currdisk C@ + PC! ( blkid )
+    BLK( 256 /MOD 3 _currdisk C@ + PC!
+        3 _currdisk C@ + PC! ( dest )
 ;
 : SELDISK 0 = IF 0 ELSE 10 THEN _currdisk C! ;
 : SERIAL@ 15 PC@ ;

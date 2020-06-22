@@ -1,6 +1,6 @@
 var emulROM = new Uint8Array(0);
-var emulSDCARDs = [{data: new Uint8Array(0), used: 0, autosave: false, level: 0, ptr: 0},
-	{data: new Uint8Array(0), used: 0, autosave: false, level: 0, ptr: 0}];
+var emulSDCARDs = [{data: new Uint8Array(0), used: 0, autosave: false, level: 0, ptr: 0, mem: 0},
+	{data: new Uint8Array(0), used: 0, autosave: false, level: 0, ptr: 0, mem: 0}];
 var emulSerial = { buffer: null, start: 0, end: 0};
 var emulWaitCount = 0, emulInitialized = false;
 var emulKeybuffer = "", emulKeybufferSend = false, emulKeypadKeys = null, emulKeypadMode = 0;
@@ -174,15 +174,6 @@ function resetCPU() {
 					emulKeybuffer = emulKeybuffer.substring(1);
 					return ch;
 				}
-			} else if (port == 4 || port == 14) {
-				var card = emulSDCARDs[port == 14 ? 1 : 0];
-				if (card.level != 0) {
-					console.log("Reading FSDEV in the middle of an addr op: "+card.ptr);
-					return 0;
-				}
-				if (card.ptr >= 0x1000000)
-					console.log("Out of bounds SD card read at "+card.ptr);
-				return card.ptr < card.data.length ? card.data[card.ptr++] : 0;
 			} else if (port == 15 && emulSerial.buffer != null) {
 				if (emulSerial.start == emulSerial.end)
 					return 0;
@@ -214,7 +205,7 @@ function resetCPU() {
 				return 0;
 			}
 	};
-	var ioWrite = function(port, value) {
+	var ioWrite = function(port, value, ram) {
 			port = port & 0xff;
 			if (port == 0 && tcontent != null) {
 				if (value == 8) {
@@ -265,33 +256,38 @@ function resetCPU() {
 				var cell = gridscreen.querySelectorAll("tr")[gridbuf[0]].childNodes[gridbuf[1]];
 				cell.innerHTML = ' ';
 				cell.classList.add("c");
-			} else if (port == 4 || port == 14) {
-				var card = emulSDCARDs[port == 14 ? 1 : 0];
-				if (card.level != 0) {
-					console.log("Writing to FSDEV in the middle of an addr op:" + card.ptr);
-					return;
-				}
-				if (card.ptr < card.used) {
-					card.data[card.ptr++] = value;
-				} else if (card.ptr < 0x1000000) {
-					card.used = card.ptr + 1;
-					var size=1;
-					while (size < card.used) size *= 2;
-					card.data = resizeUint8Array(card.data, size);
-					card.data[card.ptr++] = value;
-				} else {
-					console.log("Out of bounds FSDEV write at "+card.ptr);
-				}
-				if (card.autosave) {
-					autosaveSDCard(port == 14 ? 1 : 0);
-				}
 			} else if (port == 3 || port == 13) {
 				var card = emulSDCARDs[port == 13 ? 1 : 0];
 				if (card.level == 0) {
+					if (value == 1 || value == 2)
+						card.level = value;
+					else
+						console.log("Invalid FSDEV op: "+value);
+				} else if (card.level == 1 || card.level == 2) {
 					card.ptr = value << 18;
-					card.level = 1;
-				} else if (card.level == 1) {
+					card.level += 2;
+				} else if (card.level == 3 || card.level == 4) {
 					card.ptr |= value << 10;
+					card.level += 2;
+				} else if (card.level == 5 || card.level == 6) {
+					card.mem = value << 8;
+					card.level += 2;
+				} else if (card.level == 7) {
+					card.mem |= value;
+					ram.subarray(card.mem, card.mem+0x400).set(card.data.subarray(card.ptr, card.ptr+0x400));
+					card.level = 0;
+				} else if (card.level == 8) {
+					card.mem |= value;
+					if (card.used < card.ptr + 0x400) {
+						card.used = card.ptr + 0x400;
+						var size=1;
+						while (size < card.used) size *= 2;
+						card.data = resizeUint8Array(card.data, size);
+					}
+					card.data.subarray(card.ptr, card.ptr+0x400).set(ram.subarray(card.mem, card.mem+0x400));
+					if (card.autosave) {
+						autosaveSDCard(port == 13 ? 1 : 0);
+					}
 					card.level = 0;
 				}
 			} else if (port == 15 && emulSerial.buffer != null) {
