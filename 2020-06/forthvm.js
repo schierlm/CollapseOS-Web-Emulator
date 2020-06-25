@@ -34,6 +34,7 @@ function initForthState(ioRead, ioWrite, bootstrapping) {
 			}
 			var offset = state.readWord(current - 3);
 			current = (offset == 0) ?  0 : current - 3 - offset;
+			current = current << 16 >>> 16;
 			if (isNaN(current)) throw "dictionary corrupted while searching word "+word;
 		}
 		return 0;
@@ -71,6 +72,7 @@ function initForthState(ioRead, ioWrite, bootstrapping) {
 				state.ir = wordInsnPtrAddr(state, e.funcptr); state.psp = PS_ADDR; state.rsp = RS_ADDR;
 			} else {
 				alert(e);
+				state.ir = -1;
 				throw e;
 			}
 		}
