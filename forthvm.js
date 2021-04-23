@@ -1,5 +1,5 @@
 function initForthState(ioRead, ioWrite, bootstrapping) {
-	var RAMSTART = 0xfe00, RS_ADDR = 0xff00, PS_ADDR = 0xfffa;
+	var RAMSTART = 0xff00-0xb0, RS_ADDR = 0xff00, PS_ADDR = 0xfffa;
 
 	var ppop = function(state) {state.psp+=2; return state.readWord(state.psp);};
 	var ppush = function(state, value) { state.writeWord(state.psp, value); state.psp-=2;};
@@ -9,7 +9,7 @@ function initForthState(ioRead, ioWrite, bootstrapping) {
 
 	var chkps = function(state) {
 		if (state.psp <= state.rsp)  {
-			throw {type: "ForthStack", funcptr: 0x02}; // (oflw)
+			throw {type: "ForthStack", funcptr: 0x13}; // (oflw)
 		} else if (state.rsp < RS_ADDR || state.psp > PS_ADDR) {
 			throw {type: "ForthStack", funcptr: 0x06}; // (uflw)
 		}
@@ -46,18 +46,22 @@ function initForthState(ioRead, ioWrite, bootstrapping) {
 
 	var mainFunc = function(state) {
 		state.psp = PS_ADDR; state.rsp = RS_ADDR;
-		state.writeWord(RAMSTART+0x02, state.readWord(0x0000)); // CURRENT = LATEST
-		state.writeWord(RAMSTART+0x04, RAMSTART+0x80); // HERE = RAMSTART + 0x80
+		state.writeWord(RAMSTART+0x02, state.readWord(0x08)); // CURRENT
+		state.writeWord(RAMSTART+0x04, state.readWord(0x08)); // HERE
 		state.ir = wordInsnPtrAddr(state, 0x04); // BOOT
 	};
 
 	var executeFunc = function(state, addr) {
 		var type = state.ram[addr];
 		var pfa = addr + 1;
-		if (type > 3) throw "unsupported word type "+type;
+		if (type > 6) throw "unsupported word type "+type;
 		if (type == 0) { state.builtins[state.ram[pfa]](state); }
-		if (type == 2 || type == 3) { ppush(state, pfa); }
-		if (type == 1 || type == 3) { rpush(state, state.ir); state.ir = type == 1 ? pfa : state.readWord(pfa+2); }
+		if (type == 1) { rpush(state, state.ir); state.ir = pfa; }
+		if (type == 2) { ppush(state, pfa); }
+		if (type == 3) { ppush(state, addr+3); rpush(state, state.ir); state.ir = state.readWord(addr+2); }
+		if (type == 4) { executeFunc(state, state.readWord(pfa)); }
+		if (type == 5) { executeFunc(state, state.readWord(state.readWord(pfa))); }
+		if (type == 6) { ppush(state, state.readWord(pfa)); }
 		chkps(state);
 	};
 
@@ -96,14 +100,13 @@ function initForthState(ioRead, ioWrite, bootstrapping) {
 		main: mainFunc,
 		step: stepFunc,
 		builtins: [
-			// stable ABI
 			builtin("EXIT", function(fs) { fs.ir = rpop(fs); }),
-			builtin("(br)", function(fs) { fs.ir += fs.readWord(fs.ir) << 16 >> 16;	}),
+			builtin("(br)", function(fs) { fs.ir += fs.ram[fs.ir] << 24 >> 24; }),
 			builtin("(?br)", function(fs) {
 				if (ppop(fs) == 0) {
 					fs.builtins[1](fs); // (br)
 				} else {
-					fs.ir += 2;
+					fs.ir += 1;
 				}
 			}),
 			builtin("(loop)", function(fs) {
@@ -115,15 +118,15 @@ function initForthState(ioRead, ioWrite, bootstrapping) {
 					fs.builtins[1](fs); // (br)
 				} else {
 					rpop(fs); rpop(fs);
-					fs.ir += 2;
+					fs.ir += 1;
 				}
 			}),
-			builtin("2>R", function(fs) {var a = ppop(fs), b = ppop(fs); rpush(fs, b); rpush(fs, a); }),
+			builtin("(b)", function(fs) { ppush(fs, fs.ram[fs.ir]); fs.ir++; }),
 			builtin("(n)", function(fs) { ppush(fs, fs.readWord(fs.ir)); fs.ir += 2; }),
 			builtin("(s)", function(fs) { ppush(fs, fs.ir); fs.ir += fs.ram[fs.ir] + 1; }),
-			// end of stable ABI
 			builtin(">R", function(fs) {rpush(fs, ppop(fs)); }),
 			builtin("R>", function(fs) {ppush(fs, rpop(fs)); }),
+			builtin("2>R", function(fs) {var a = ppop(fs), b = ppop(fs); rpush(fs, b); rpush(fs, a); }),
 			builtin("2R>", function(fs) {var a = rpop(fs), b = rpop(fs); ppush(fs, b); ppush(fs, a); }),
 			builtin("EXECUTE", function(fs) { var addr = ppop(fs); chkps(fs); executeFunc(fs, addr); }),
 			builtin("ROT", function(fs) { var c = ppop(fs), b = ppop(fs), a = ppop(fs); chkps(fs); ppush(fs, b); ppush(fs, c); ppush(fs, a); }),
@@ -135,16 +138,13 @@ function initForthState(ioRead, ioWrite, bootstrapping) {
 			builtin("2DROP", function(fs) { ppop(fs); ppop(fs); }),
 			builtin("2DUP", function(fs) { var b = ppop(fs), a = ppop(fs); chkps(fs); ppush(fs, a); ppush(fs, b); ppush(fs, a); ppush(fs, b); }),
 			builtin("S0", function(fs) { ppush(fs, PS_ADDR); }),
-			builtin("'S", function(fs) { ppush(fs, fs.psp); }),
-			builtin("NOT", function(fs) { var a = ppop(fs); chkps(fs); ppush(fs, !a | 0); }),
 			builtin2("AND", function(a, b) { return a & b; }),
 			builtin2("OR", function(a, b) { return a | b; }),
 			builtin2("XOR", function(a, b) { return a ^ b; }),
+			builtin("NOT", function(fs) { var a = ppop(fs); chkps(fs); ppush(fs, !a | 0); }),
 			builtin2("+", function(a, b) { return a + b; }),
 			builtin2("-", function(a, b) { return a - b; }),
 			builtin2("*", function(a, b) { return a * b; }),
-			builtin2("RSHIFT", function(a, b) { return a >> b; }),
-			builtin2("LSHIFT", function(a, b) { return a << b; }),
 			builtin("/MOD", function(fs) { var b = ppop(fs), a = ppop(fs); chkps(fs); ppush(fs, a%b | 0); ppush(fs, a/b | 0); }),
 			builtin("!", function(fs) { var addr = ppop(fs), val = ppop(fs); fs.writeWord(addr, val); }),
 			builtin("@", function(fs) { var addr = ppop(fs); chkps(fs), ppush(fs, fs.readWord(addr)); }),
@@ -156,35 +156,24 @@ function initForthState(ioRead, ioWrite, bootstrapping) {
 			builtin("I'", function(fs) { ppush(fs, fs.readWord(fs.rsp-2)); }),
 			builtin("J", function(fs) { ppush(fs, fs.readWord(fs.rsp-4)); }),
 			builtin("BYE", function(fs) { fs.ir = -1; }),
-			builtin("(resSP)", function(fs) { fs.psp = PS_ADDR; }),
-			builtin("(resRS)", function(fs) { fs.rsp = RS_ADDR; }),
-			builtin("1+", function(fs) { var a = ppop(fs); chkps(fs); ppush(fs, a+1); }),
-			builtin("1-", function(fs) { var a = ppop(fs); chkps(fs); ppush(fs, a-1); }),
-			builtin("S=", function(fs) {
-				var b = ppop(fs), a = ppop(fs);
+			builtin("ABORT", function(fs) { fs.psp = PS_ADDR; fs.rsp = RS_ADDR; fs.ir = wordInsnPtrAddr(fs, 0x0a) }),
+			builtin("QUIT", function(fs) { fs.rsp = RS_ADDR; fs.ir = wordInsnPtrAddr(fs, 0x0a) }),
+			builtin("[]=", function(fs) {
+				var len = ppop(fs), b = ppop(fs), a = ppop(fs);
 				chkps(fs);
-				var result = 0, len = fs.ram[a];
-				if (len == fs.ram[b]) {
-					result = 1;
-					for(var i = 1; i <= len; i++) {
-						if (fs.ram[a+i] != fs.ram[b+i]) {
-							result = 0;
-							break;
-						}
+				for(var i = 0; i < len; i++) {
+					if (fs.ram[a+i] != fs.ram[b+i]) {
+						ppush(fs, 0);
+						return;
 					}
 				}
-				ppush(fs, result);
+				ppush(fs, 1);
 			}),
-			builtin("CMP", function(fs) {
-				var b = ppop(fs), a = ppop(fs);
-				chkps(fs);
-				var result = 0;
-				if (a > b) result = 1;
-				if (a < b) result = -1;
-				ppush(fs, result);
-			}),
-			builtin("_find", function(fs) {
-				var w = ppop(fs), cur = ppop(fs);
+			builtin2("=", function(a, b) { return a == b ? 1 : 0 }),
+			builtin2("<", function(a, b) { return a < b ? 1 : 0 }),
+			builtin2(">", function(a, b) { return a > b ? 1 : 0 }),
+			builtin("FIND", function(fs) {
+				var w = ppop(fs), cur = fs.readWord(RAMSTART+0x02);
 				chkps(fs);
 				var word = "", len = fs.ram[w];
 				for(var i = 1; i <= len; i++) {
@@ -199,19 +188,15 @@ function initForthState(ioRead, ioWrite, bootstrapping) {
 					ppush(fs, 1);
 				}
 			}),
-			builtin("PICK", function(fs) {
-				var idx = ppop(fs);
-				var addr = fs.psp + 2 + idx * 2;
-				if (addr > PS_ADDR) {
-					fs.ir = wordInsnPtrAddr(fs, 0x06); // (uflw)
-				} else {
-					ppush(fs, fs.readWord(addr));
-				}
-			}),
-			builtin("(roll)", function(fs) {
-				var cnt = ppop(fs);
-				fs.ram.subarray(fs.psp + 4, fs.psp + 4 + cnt).set(fs.ram.subarray(fs.psp + 2, fs.psp + 2 + cnt));
-			}),
+			builtin("1+", function(fs) { var a = ppop(fs); chkps(fs); ppush(fs, a+1); }),
+			builtin("1-", function(fs) { var a = ppop(fs); chkps(fs); ppush(fs, a-1); }),
+			builtin2("RSHIFT", function(a, b) { return a >> b; }),
+			builtin2("LSHIFT", function(a, b) { return a << b; }),
+			builtin("TICKS", function(fs) { var a = ppop(fs); chkps(fs); console.log("TICKS "+a+" NOT IMPLEMENTED"); }),
+			builtin("ROT>", function(fs) { var c = ppop(fs), b = ppop(fs), a = ppop(fs); chkps(fs); ppush(fs, c); ppush(fs, a); ppush(fs, b); }),
+			builtin("|L", function(fs) { var n = ppop(fs); chkps(fs); ppush(fs, n >> 8); ppush(fs, n & 0xff); }),
+			builtin("|M", function(fs) { var n = ppop(fs); chkps(fs); ppush(fs, n & 0xff); ppush(fs, n >> 8); }),
+			builtin2("CRC16", function(a, b) { console.log("CRC16(" + a + "," + b + ") NOT IMPLEMENTED"); return 0; }),
 		]
 	});
 }

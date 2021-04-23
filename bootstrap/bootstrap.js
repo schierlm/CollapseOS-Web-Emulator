@@ -24,7 +24,7 @@ function ioRead(port) {
 			return ch;
 		}
 	} else {
-		throw "invalid port write: "+port;
+		throw "invalid port read: " + port;
 	}
 }
 
@@ -76,6 +76,9 @@ function ioWrite(port, value) {
 			console.timeEnd("Bootstrap");
 			forthState.ir = -1;
 		}
+	} else if (port == 5 || port == 6) {
+		if (port == 5 && value == 0 && (tcontent.innerText !="" || tbuffer != ""))
+			ioWrite(0, 10);
 	} else {
 		throw "invalid port write: "+port;
 	}
@@ -83,7 +86,7 @@ function ioWrite(port, value) {
 
 // STAGE 2 CODE //
 
-var RAMSTART = 0xfe00, RS_ADDR = 0xff00, PS_ADDR = 0xfffa;
+var RAMSTART = 0xfe50, RS_ADDR = 0xff00, PS_ADDR = 0xfffa;
 
 function runStage2() {
 	try {
@@ -157,6 +160,25 @@ function addWordref(word, allowImmediate) {
 	addWord(wordref);
 }
 
+function addLiteral(n) {
+	if (n >= 0 && n < 0x100) {
+		addWordref("(b)");
+		addByte(n);
+	} else {
+		addWordref("(n)");
+		addWord(n);
+	}
+}
+
+function addEntry(state) {
+	var name = readWord();
+	for(var i = 0; i < name.length; i++) {
+		addByte(name.charCodeAt(i));
+	}
+	addWord(state.xcomp.here - state.xcomp.current);
+	addByte(name.length);
+	state.xcomp.current = state.xcomp.here;
+}
 
 function interpretWord(word) {
 	var func = nFuncs[word];
@@ -196,28 +218,20 @@ var immFuncs = {
 			interpretWord(word);
 		}
 	},
-	"LIT<": function(state) {
-		addWordref("(s)");
-		var word = readWord();
-		addByte(word.length);
-		for(var i=0; i<word.length; i++) {
-			addByte(word.charCodeAt(i));
-		}
-	},
 	"IF": function(state) {
 		addWordref("(?br)");
 		state.main.ppush(state, state.xcomp.here);
-		addWord(0);
+		addByte(0);
 	},
 	"THEN": function(state) {
 		var addr = state.readWord(state.psp+2);
-		state.writeWord(addr, (-relativeOffset(state)) >>> 0);
+		state.ram[addr] = (-relativeOffset(state)) >>> 0;
 	},
 	"ELSE": function(state) {
 		addWordref("(br)");
-		addWord(0);
+		addByte(0);
 		immFuncs.THEN(state);
-		state.main.ppush(state, state.xcomp.here - 2);
+		state.main.ppush(state, state.xcomp.here - 1);
 	},
 	"DO": function(state) {
 		addWordref("2>R");
@@ -225,18 +239,18 @@ var immFuncs = {
 	},
 	"LOOP": function(state) {
 		addWordref("(loop)");
-		addWord(relativeOffset(state));
+		addByte(relativeOffset(state));
 	},
 	"BEGIN": function(state) {
 		state.main.ppush(state, state.xcomp.here);
 	},
 	"AGAIN": function(state) {
 		addWordref("(br)");
-		addWord(relativeOffset(state));
+		addByte(relativeOffset(state));
 	},
 	"UNTIL": function(state) {
 		addWordref("(?br)");
-		addWord(relativeOffset(state));
+		addByte(relativeOffset(state));
 	},
 	'LIT"': function(state) {
 		addWordref("(s)");
@@ -251,12 +265,18 @@ var immFuncs = {
 		}
 		state.ram[start] = len;
 	},
+	'W"': function(state) {
+		immFuncs['LIT"'](state);
+		addLiteral(RAMSTART + 0x32);
+		addWordref("!");
+	},
 	"[COMPILE]": function(state) {
 		addWordref(readWord(), true);
 	},
 	"COMPILE": function(state) {
-		addWordref("(n)");
-		addWordref(readWord(), true);
+		var wordref = forthState.main.find(forthState, forthState.xcomp.current, readWord());
+		if (wordref == 0) throw "word for COMPILE not found in compiled dictionary: "+word;
+		addLiteral(wordref);
 		addWordref(",");
 	},
 	"[']": function(state) {
@@ -265,26 +285,28 @@ var immFuncs = {
 	},
 };
 
+
 var nFuncs = {
-	"RAMSTART": makeConstant(RAMSTART),
-	"RS_ADDR": makeConstant(RS_ADDR),
-	"PS_ADDR": makeConstant(PS_ADDR),
+	"SYSVARS": makeConstant(RAMSTART),
+	"GRID_MEM": makeConstant(RAMSTART+0xA0),
 	"(": immFuncs["("],
-	"A,": function(state) {
+	"C,": function(state) {
 		addByte(state.main.ppop(state));
 	},
-	"A,,": function(state) {
-		addWord(state.main.ppop(state));
+	"T!": function(state) {
+		var addr = state.main.ppop(state);
+		var val = state.main.ppop(state);
+		forthState.writeWord(addr, val >>> 0);
 	},
-	",": function(state) { // same as A,,
-		addWord(state.main.ppop(state));
+	"ALLOT0": function(state) {
+		var count = state.main.ppop(state);
+		for(var i = 0 ; i < count; i++) {
+			addByte(0);
+		}
 	},
 	"ORG": makeConstant(0xe000), // address where ORG is stored
 	"BIN(": makeConstant(0xe002), // address where BIN( is stored
-	"H@": function(state) {
-		state.main.ppush(state, state.xcomp.here);
-	},
-	"PC": function(state) { // same as H@
+	"HERE": function(state) {
 		state.main.ppush(state, state.xcomp.here);
 	},
 	"XCURRENT_!": function(state) {
@@ -293,22 +315,24 @@ var nFuncs = {
 	"XCURRENT-@-_xapply": function(state) {
 		state.main.ppush(state, state.xcomp.current);
 	},
-	"(entry)": function(state) {
-		var name = readWord();
-		for(var i=0; i<name.length; i++) {
-			addByte(name.charCodeAt(i));
-		}
-		addWord(state.xcomp.here - state.xcomp.current);
-		addByte(name.length);
-		state.xcomp.current = state.xcomp.here;
-	},
-	"JSCODE": function(state) {
-		nFuncs["(entry)"](state);
+	"NATIVE": function(state) {
+		addEntry(state);
 		addByte(0); // native
-		addByte(state.main.ppop(state));
+		addByte(state.nativeidx);
+		state.nativeidx++;
+	},
+	"CONSTANT": function(state) {
+		addEntry(state);
+		addByte(6); // constant
+		addWord(state.main.ppop(state));
+	},
+	":**": function(state) {
+		addEntry(state);
+		addByte(5); // ialias
+		addWord(state.main.ppop(state));
 	},
 	":": function(state) {
-		nFuncs["(entry)"](state);
+		addEntry(state);
 		addByte(1); // compiled
 		while(true) {
 			var word = readWord();
@@ -317,12 +341,10 @@ var nFuncs = {
 			var func = immFuncs[word];
 			if (func !== undefined) {
 				func(forthState);
-			} else if (/^[0-9]+$|^0x?[0-9a-fA-F]+$/.test(word) && word != "0" && word != "-1" && word != "1") {
-				addWordref("(n)");
-				addWord(word-0|0);
+			} else if (/^-?[0-9]+$|^0x?[0-9a-fA-F]+$/.test(word)) {
+				addLiteral(word-0|0);
 			} else if (/^'.'$/.test(word)) {
-				addWordref("(n)");
-				addWord(word.charCodeAt(1) | 0);
+				addLiteral(word.charCodeAt(1) | 0);
 			} else {
 				addWordref(word)
 			}
@@ -330,16 +352,10 @@ var nFuncs = {
 		addWordref("EXIT");
 	},
 	"LITN": function(state) {
-		addWordref("(n)");
-		addWord(state.main.ppop(state));
+		addLiteral(state.main.ppop(state));
 	},
 	"IMMEDIATE": function(state) {
 		state.ram[state.xcomp.current - 1] |= 0x80;
-	},
-	"X'": function(state) {
-		var wordref = forthState.main.find(forthState, forthState.xcomp.current, readWord());
-		if (wordref == 0) throw "word not found in compiled dictionary: "+word;
-		state.main.ppush(state, wordref);
 	},
 	',"': function(state) {
 		var ch = scriptBuffer.charCodeAt(scriptPos++);
@@ -349,7 +365,18 @@ var nFuncs = {
 			if (isNaN(ch)) throw "unterminated string literal";
 		}
 	},
-	"EOT,": function(state) {
+	'XWRAP"': function(state) {
+		addByte('_'.charCodeAt(0));
+		addWord(state.xcomp.here - state.xcomp.current);
+		addByte(1);
+		state.xcomp.current = state.xcomp.here;
+		forthState.writeWord(0x08 /* LATEST */, state.xcomp.here >>> 0);
+		var ch = scriptBuffer.charCodeAt(scriptPos++);
+		while(ch != '"'.charCodeAt(0)) {
+			addByte(ch);
+			ch = scriptBuffer.charCodeAt(scriptPos++);
+			if (isNaN(ch)) throw "unterminated string literal";
+		}
 		addByte(4);
 	},
 };
@@ -360,7 +387,7 @@ function bootstrapStage1() {
 	console.time("Bootstrap");
 	try {
 		statusLen = 0;
-		scriptBuffer = document.getElementById("codetext").value.replace(/\r|\n|\t/g, " ").replace("H@ XCURRENT !", "H@ XCURRENT_!").replace(/XCURRENT @ _xapply/g, "XCURRENT-@-_xapply")+" ";
+		scriptBuffer = document.getElementById("codetext").value.replace(/\r|\n|\t/g, " ").replace(/\( \(\(\( \).*?\( \)\)\) \)/g, "").replace("HERE 4 + XCURRENT !", "HERE 4 + XCURRENT_!").replace(/XCURRENT @ _xapply/g, "XCURRENT-@-_xapply")+" ";
 		if (scriptBuffer.indexOf("###P1### )") != -1)
 			scriptBuffer = scriptBuffer.substring(scriptBuffer.indexOf("###P1### )") + 10);
 		scriptPos = 0;
@@ -372,6 +399,7 @@ function bootstrapStage1() {
 		forthState.psp = PS_ADDR;
 		forthState.rsp = RS_ADDR;
 		forthState.xcomp = {current: 0, here: 0, builtins: {}};
+		forthState.nativeidx = 0;
 		for(var i = 0; i < forthState.builtins.length; i++) {
 			var f = forthState.builtins[i];
 			forthState.xcomp.builtins[f.funcname] = f;
