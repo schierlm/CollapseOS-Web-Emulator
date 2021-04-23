@@ -131,13 +131,14 @@ function initEmulation() {
 		vdpscreen.onkeydown = downHandler;
 	}
 	var gridscreen = document.getElementById("gridscreen");
-	if (gridscreen != null) {
+	if (gridscreen != null && !gridscreen.initialized) {
 		for(var cell of gridscreen.querySelectorAll("td")) {
 			cell.innerText="\uFEFF ";
 			cell.classList.remove("c");
 		}
 		gridscreen.onkeypress = pressHandler;
 		gridscreen.onkeydown = downHandler;
+		gridscreen.initialized = true;
 	}
 	var nobgrun = document.getElementById("nobgrun");
 	if (nobgrun != null) {
@@ -145,6 +146,23 @@ function initEmulation() {
 	}
 	emulInterval = window.setInterval(runCPU, 1000);
 	emulInitialized = true;
+}
+
+function scrollGrid(gridscreen, scrollback, gridscroll) {
+	var firstRow = gridscreen.querySelector("tr");
+	firstRow.parentNode.appendChild(firstRow);
+	for(var i = 0; i < 80; i++) {
+		if (scrollback != null) {
+			scrollback.innerHTML += firstRow.childNodes[i].innerHTML.replace("\uFEFF","");
+		}
+		firstRow.childNodes[i].innerText = "\uFEFF ";
+	}
+	if (scrollback != null) {
+		scrollback.innerHTML += "<br>";
+	}
+	if (gridscroll != null) {
+		gridscroll.scrollTop = gridscroll.scrollHeight;
+	}
 }
 
 function resetCPU() {
@@ -156,9 +174,24 @@ function resetCPU() {
 	var tcontent = document.getElementById("content");
 	var vdpscreen = document.getElementById("vdpscreen");
 	var gridscreen = document.getElementById("gridscreen");
-	var gridbuf = gridscreen == null ? null : [0,0];
+	var gridpos = gridscreen == null ? null : {l:0, c:0};
 	var gridscroll = document.getElementById("gridscroll");
 	var scrollback = document.getElementById("scrollback");
+	if (gridscreen != null && scrollback != null) {
+		var lastline = 0;
+		for (var i = 0; i < 25; i++) {
+			var row = gridscreen.querySelectorAll("tr")[i];
+			for (var j = 0; j < 80; j++) {
+				if (row.childNodes[j].innerText != '\uFEFF') {
+					lastline = i + 1;
+					break;
+				}
+			}
+		}
+		for(var i = 0; i < lastline; i++) {
+			scrollGrid(gridscreen, scrollback, gridscroll);
+		}
+	}
 	var ioRead = function (port) {
 			port = port & 0xff;
 			if (port == 0) {
@@ -219,42 +252,28 @@ function resetCPU() {
 				} else if (value != 13) {
 					tcontent.innerText += String.fromCharCode(value);
 				}
-			} else if (port == 0 && gridbuf != null) {
-				var cell = gridscreen.querySelectorAll("tr")[gridbuf[0]].childNodes[gridbuf[1]];
+			} else if ((port == 0 || port == 5) && gridpos != null) {
+				var cell = gridscreen.querySelectorAll("tr")[gridpos.l].childNodes[gridpos.c];
 				cell.classList.remove("c");
-				if (value == 8) {
-					gridbuf[1]--;
-					if (gridbuf[1] == -1) gridbuf[1] = 0;
-				} else if (value == 10) {
-					cell.innerText= ' ';
-					gridbuf[1] = 80;
-				} else if (value != 13) {
-					cell.innerText = "\uFEFF"+String.fromCharCode(value);
-					gridbuf[1]++;
-				}
-				if (gridbuf[1] == 80) {
-					gridbuf[0]++;
-					gridbuf[1] = 0;
-					if (gridbuf[0] == 25) {
-						gridbuf[0]--;
-						var firstRow = gridscreen.querySelector("tr");
-						firstRow.parentNode.appendChild(firstRow);
-						for(var i = 0; i < 80; i++) {
-							if (scrollback != null) {
-								scrollback.innerHTML += firstRow.childNodes[i].innerHTML.replace("\uFEFF","");
-							}
-							firstRow.childNodes[i].innerText = "\uFEFF ";
-						}
-						if (scrollback != null) {
-							scrollback.innerHTML += "<br>";
-						}
-						if (gridscroll != null) {
-							gridscroll.scrollTop = gridscroll.scrollHeight;
-						}
+				if (port == 0) {
+					cell.innerText = "\uFEFF" + String.fromCharCode(value);
+				} else if (value < 80) {
+					gridpos.c = value;
+				} else if (value >= 100 && value < 125) {
+					gridpos.l = value - 100;
+				} else if (value >= 200 && value < 225) {
+					gridpos.l = value - 200;
+					var cells = gridscreen.querySelectorAll("tr")[gridpos.l].childNodes;
+					for (var i = 0; i < 80; i++) {
+						cells[i].innerText = "\uFEFF ";
 					}
+				} else if (value == 255) {
+					gridpos.l = 24;
+					scrollGrid(gridscreen, scrollback, gridscroll);
+				} else {
+					console.log("Out of bounds cursor command: " + value);
 				}
-				var cell = gridscreen.querySelectorAll("tr")[gridbuf[0]].childNodes[gridbuf[1]];
-				cell.innerHTML = ' ';
+				var cell = gridscreen.querySelectorAll("tr")[gridpos.l].childNodes[gridpos.c];
 				cell.classList.add("c");
 			} else if (port == 3 || port == 13) {
 				var card = emulSDCARDs[port == 13 ? 1 : 0];
@@ -302,16 +321,6 @@ function resetCPU() {
 				}
 				emulSerial.buffer[emulSerial.end] = value;
 				emulSerial.end++;
-			} else if ((port == 5 || port == 6) && tcontent != null) {
-				tcontentold.innerHTML += tcontent.innerHTML + '<span style="background-color: black; border: 1px dashed yellow;">@'+(port==5 ? 'X':'Y')+"="+value+"</span>";
-				tcontent.innerText = "";
-				terminal.scrollTop = terminal.scrollHeight;
-			} else if ((port == 5 || port == 6) && gridbuf != null) {
-				var cell = gridscreen.querySelectorAll("tr")[gridbuf[0]].childNodes[gridbuf[1]];
-				cell.classList.remove("c");
-				gridbuf[6-port] = value;
-				var cell = gridscreen.querySelectorAll("tr")[gridbuf[0]].childNodes[gridbuf[1]];
-				cell.classList.add("c");
 			} else if (port == 0x3F && emulKeypadKeys !== null) {
 				emulKeypadMode = value;
 			} else if (port == 0xBF && emulVDPPatternRAM != null) { // vdp control

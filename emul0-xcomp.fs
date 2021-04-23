@@ -103,13 +103,13 @@ NATIVE CRC16
 
 : COLS 80 ; : LINES 25 ;
 : CURSOR! ( new old -- )
-    DROP COLS /MOD 6 PC! ( y ) 5 PC! ( x ) ;
+    DROP COLS /MOD 100 + 5 PC! ( y ) 5 PC! ( x ) ;
 : CELL! ( c pos -- ) 0 CURSOR! 0 PC! ;
 
 ( scrollback buffer )
 : NEWLN ( ln ln -- ln )
-  DUP 0 = IF DROP DROP 24 24 LF 1999 CELL! THEN
-  COLS * DUP COLS + 1- SWAP DO SPC I CELL! LOOP ;
+  DUP 0 = IF DROP DROP 24 24 255 5 PC! THEN
+  200 + 5 PC! ;
 
 240 241 LOADR ( Grid #=240 #=241 )
 
