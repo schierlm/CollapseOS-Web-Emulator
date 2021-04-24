@@ -216,7 +216,7 @@ function resetCPU() {
 					emulSerial.start = emulSerial.end = 0;
 				}
 				return sbyte;
-			} else if (port == 0xDC && emulKeypadKeys !== null && emulKeypadMode == 0xFD) {
+			} else if (port == 0xDC && emulKeypadKeys !== null && emulKeypadMode == 0x20) {
 				var result = 0;
 				if (emulKeypadKeys.indexOf("C") == -1) result |= 0x20;
 				if (emulKeypadKeys.indexOf("B") == -1) result |= 0x10;
@@ -226,7 +226,7 @@ function resetCPU() {
 				if (emulKeypadKeys.indexOf("Up") == -1) result |= 0x01;
 				if (emulKeybuffer != "") result = 0x1F;
 				return result;
-			} else if (port == 0xDC && emulKeypadKeys !== null && emulKeypadMode == 0xDD) {
+			} else if (port == 0xDC && emulKeypadKeys !== null && emulKeypadMode == 0x00) {
 				var result = 0;
 				if (emulKeypadKeys.indexOf("Start") == -1) result |= 0x20;
 				if (emulKeypadKeys.indexOf("A") == -1) result |= 0x10;
