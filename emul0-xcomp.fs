@@ -1,105 +1,41 @@
-( based on collapseos/cvm/{common,forth}.fs )
-0xff00 CONSTANT RS_ADDR
-0xfffa CONSTANT PS_ADDR
-RS_ADDR 0xb0 - CONSTANT SYSVARS
-SYSVARS 0xa0 + CONSTANT GRID_MEM
-0x4000 CONSTANT HERESTART
-2 LOAD ( assembler common words #=002 )
-200 204 LOADR ( xcomp low #=200 #=201 #=202 #=203 #=204 )
-CREATE nativeidx 0 ,
-: NATIVE CODE nativeidx @ DUP C, 1+ nativeidx ! ;
-205 LOAD ( xcomp high #=205 )
+( based on collapseos/cvm/{common,grid}.fs )
+2 VALUES PS_ADDR $fffa RS_ADDR $ff00
+RS_ADDR $90 - VALUE SYSVARS
+SYSVARS $80 + VALUE GRID_MEM
+$4000 VALUE HERESTART
+\ # 0 VALUE JROFF 1 VALUE JROPLEN
 
-HERE ORG !
+ARCHM ASML XCOMPL (  #=002 #=200 )
+\ # : COREH ;
+CVMH ( #=304 #=305 #=306 #=307 #=308 )
+ASMH ( #=003 )
+XCOMPH ( #=201 #=202 #=203 #=204 #=205 )
 
 ( start here for pass 1 bootstrap ###P1### )
 
-0x11 ALLOT0
-( END OF STABLE ABI )
-( 11 SUFLW ) 12 C, ," PS underflow"
-( 1e SOFLW ) 8 C, ," overflow"
-HERE 4 + XCURRENT ! ( make next CODE have 0 prev field )
-NATIVE EXIT
-NATIVE (br)
-NATIVE (?br)
-NATIVE (loop)
-NATIVE (b)
-NATIVE (n)
-NATIVE (s)
-NATIVE >R
-NATIVE R>
-NATIVE 2>R
-NATIVE 2R>
-NATIVE EXECUTE
-NATIVE ROT
-NATIVE DUP
-NATIVE ?DUP
-NATIVE DROP
-NATIVE SWAP
-NATIVE OVER
-NATIVE 2DROP
-NATIVE 2DUP
-NATIVE 'S
-NATIVE AND
-NATIVE OR
-NATIVE XOR
-NATIVE NOT
-NATIVE +
-NATIVE -
-NATIVE *
-NATIVE /MOD
-NATIVE !
-NATIVE @
-NATIVE C!
-NATIVE C@
-NATIVE PC!
-NATIVE PC@
-NATIVE I
-NATIVE I'
-NATIVE J
-NATIVE BYE
-NATIVE ABORT
-NATIVE QUIT
-NATIVE []=
-NATIVE =
-NATIVE <
-NATIVE >
-NATIVE FIND
-NATIVE 1+
-NATIVE 1-
-NATIVE RSHIFT
-NATIVE LSHIFT
-NATIVE TICKS
-NATIVE ROT>
-NATIVE |L
-NATIVE |M
-NATIVE CRC16
+CVMC ( #=302 #=303 )
+COREL ( #=207 #=208 #=209 #=210 #=211 #=212 #=213 #=214 #=215 )
+      ( #=216 #=217 #=218 #=219 #=220 #=221 #=222 #=223 #=224 )
+CVMH ( #=304 #=305 #=306 #=307 #=308 )
+ASMH ( #=003 )
 
-210 231 LOADR ( forth low #=210 #=211 #=212 #=213 #=214 #=215 #=216 #=217 #=218 #=219 #=220 #=221 )
-( #=222 #=223 #=224 #=225 #=226 #=227 #=228 #=229 #=230 #=231 )
-
-: _currdisk [ SYSVARS 0x42 + LITN ] ;
-: (emit) 0 PC! ;
+: _currdisk [ SYSVARS $84 + LITN ] ;
 : (key?) 0 PC@ 0 = IF 0 PC@ 1 ELSE 0 THEN ;
-: EFS@
-    1 3 _currdisk C@ + PC! ( read )
-    256 /MOD 3 _currdisk C@ + PC!
+: (emit) 0 PC! ;
+: _ ( n blk( -- ) SWAP ( blk( n )
+  ( n ) L|M 3 _currdisk C@ + PC!
         3 _currdisk C@ + PC! ( blkid )
-    BLK( 256 /MOD 3 _currdisk C@ + PC!
-        3 _currdisk C@ + PC! ( dest )
-;
-: EFS!
-    2 3 _currdisk C@ + PC! ( write )
-    256 /MOD 3 _currdisk C@ + PC!
-        3 _currdisk C@ + PC! ( blkid )
-    BLK( 256 /MOD 3 _currdisk C@ + PC!
-        3 _currdisk C@ + PC! ( dest )
-;
-: SELDISK 0 = IF 0 ELSE 10 THEN _currdisk C! ;
+  ( blk( ) L|M 3 _currdisk C@ + PC!
+        3 _currdisk C@ + PC! ( dest ) ;
+: (blk@) 1 3 _currdisk C@ + PC! ( read ) _ ;
+: (blk!) 2 3 _currdisk C@ + PC! ( write ) _ ;
+
+BLKSUB ( #=230 #=231 #=232 #=233 #=234 )
+: SELDISK FLUSH 0 = IF 0 ELSE 10 THEN _currdisk C! ;
 : SERIAL@ 15 PC@ ;
 : SERIAL! 15 PC! ;
 
-( fork between stage and forth begins here )
+\ fork between grid and serial begins here
 
 : COLS 80 ; : LINES 25 ;
 : CURSOR! ( new old -- )
@@ -107,14 +43,11 @@ NATIVE CRC16
 : CELL! ( c pos -- ) 0 CURSOR! 0 PC! ;
 
 ( scrollback buffer )
-: NEWLN ( ln ln -- ln )
-  DUP 0 = IF DROP DROP 24 24 255 5 PC! THEN
-  200 + 5 PC! ;
+: NEWLN ( old -- new )
+  1+ DUP LINES = IF 1- 255 5 PC! THEN
+  DUP 200 + 5 PC! ;
 
-240 241 LOADR ( Grid #=240 #=241 )
-
-: INIT$
-  BLK$ 0 SELDISK GRID$ ;
-
-236 239 LOADR ( forth high #=236 #=237 #=238 #=239 )
-XWRAP" INIT$ ' EFS@ ' BLK@* **! ' EFS! ' BLK!* **!"
+GRIDSUB ( #=240 #=241 )
+: INIT BLK$ 0 SELDISK GRID$ ;
+( COREH ) ( #=225 #=226 #=227 #=228 #=229 )
+XWRAP

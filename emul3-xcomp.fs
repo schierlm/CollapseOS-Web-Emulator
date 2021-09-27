@@ -1,50 +1,46 @@
-( based on collapseos/emul/z80/xcomp.fs )
-0xff00 CONSTANT RS_ADDR
-0xfffa CONSTANT PS_ADDR
-RS_ADDR 0xb0 - CONSTANT SYSVARS
-0x4000 CONSTANT HERESTART
-0xbf   CONSTANT TMS_CTLPORT
-0xbe   CONSTANT TMS_DATAPORT
-SYSVARS 0xa0 + CONSTANT GRID_MEM
-SYSVARS 0xa3 + CONSTANT CPORT_MEM
-0x3f   CONSTANT CPORT_CTL
-0xdc   CONSTANT CPORT_D1
-0xdd   CONSTANT CPORT_D2
-SYSVARS 0xa4 + CONSTANT PAD_MEM
-5 LOAD  ( z80 assembler )
-: ZFILL, ( u ) 0 DO 0 A, LOOP ;
-262 263 LOADR ( font compiler )
-280 LOAD  ( boot.z80.decl )
-200 205 LOADR ( xcomp )
-281 303 LOADR ( boot.z80 )
-210 231 LOADR ( forth core low )
+( based on collapseos/emul/z80/xcomp.fs / collapseos/arch/z80/sms/xcomp.fs )
+$ff00 VALUE RS_ADDR
+$fffa VALUE PS_ADDR
+RS_ADDR $90 - VALUE SYSVARS
+SYSVARS $80 + VALUE GRID_MEM
+SYSVARS $83 + VALUE CPORT_MEM
+SYSVARS $84 + VALUE PAD_MEM
+$4000 VALUE HERESTART
+$bf   VALUE TMS_CTLPORT
+$be   VALUE TMS_DATAPORT
+$3f   VALUE CPORT_CTL
+$dc   VALUE CPORT_D1
+$dd   VALUE CPORT_D2
+
+ARCHM Z80A XCOMPL FONTC Z80H
+XCOMPH Z80C COREL Z80H ASMH
+
 CREATE ~FNT CPFNT7x7
-315 317 LOADR ( TMS9918 )
-330 332 LOADR ( VDP )
-240 241 LOADR ( Grid )
-348 349 LOADR ( SMS ports )
-335 338 LOADR ( PAD )
+
+335 337 LOADR ( TMS9918 )
+350 352 LOADR ( VDP )
+GRIDSUB
+368 369 LOADR ( SMS ports )
+355 358 LOADR ( PAD )
 
 : (key?) ( -- c? f )
   _next C@ IF _next C@ 0 _next C! 1 EXIT THEN
   _updsel IF
     0 PC@ 0 = IF 0 PC@ 1 EXIT THEN
     _prevstat C@
-    0x20 ( BUTC ) OVER AND NOT IF DROP _sel C@ 1 EXIT THEN
-    0x40 ( BUTA ) AND NOT IF 0x8 ( BS ) 1 EXIT THEN
+    $20 ( BUTC ) OVER AND NOT IF DROP _sel C@ 1 EXIT THEN
+    $40 ( BUTA ) AND NOT IF $8 ( BS ) 1 EXIT THEN
     ( If not BUTC or BUTA, it has to be START )
-    0xd _next C! _sel C@ 1
+    $d _next C! _sel C@ 1
     ELSE 0 ( f ) THEN ;
 
-: EFS@
-    1 3 PC! ( read )
-    256 /MOD 3 PC! 3 PC! ( blkid )
-    BLK( 256 /MOD 3 PC! 3 PC! ( dest )
-;
-: EFS!
-    2 3 PC! ( write )
-    256 /MOD 3 PC! 3 PC! ( blkid )
-    BLK( 256 /MOD 3 PC! 3 PC! ( dest )
-;
-236 239 LOADR ( forth core high )
-XWRAP" VDP$ GRID$ PAD$ BLK$ ' EFS@ ' BLK@* **! ' EFS! ' BLK!* **! "
+: _ ( n blk( -- ) SWAP ( blk( n )
+  ( n ) 256 /MOD 3 PC! 3 PC! ( blkid )
+  ( blk( ) 256 /MOD 3 PC! 3 PC! ( dest ) ;
+: (blk@) 1 3 PC! ( read ) _ ;
+: (blk!) 2 3 PC! ( write ) _ ;
+BLKSUB
+
+
+: INIT VDP$ GRID$ PAD$ BLK$ ;
+XWRAP
