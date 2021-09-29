@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<head>
+<meta charset="utf-8">
+<title>Emulator 1 (Simple system) &ndash; Collapse OS Web Emulators</title>
+<script type="text/javascript" src="utils.js"></script>
+<script type="text/javascript" src="emul.js"></script>
+<script type="text/javascript" src="z80vm.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/DrGoldfire/Z80.js@2304ae274d49bc43e26067a2c0dd329c57305425/Z80.js"></script>
+<style type="text/css">
+body { font-family: Verdana, Arial, Helvetica, sans-serif; }
+.cursor {color: red;}
+input#buffer { width: 85%;}
+/*input#buffer, input#hexbuffer { float: left; width: 85%;}*/
+label.lbuf {float:left; width: 10%;}
+.clear {clear:left;}
+#terminal { clear: both; display: block; border: 1px solid #0000FF; margin 1em; padding: 1px; background-color: #666; color: #00FF00; height: 400px; overflow-y: scroll;}
+</style>
+</head>
+<body>
+<h1>Emulator 1 (Simple system) &ndash; <a href="index.html">Collapse OS Web Emulators</a></h1>
+<h2>CPU/ROM</h2>
+<p><span id="romstatus">No ROM loaded.</span>
+
+<input type="file" id="romfile" data-autoload="emul1.png" style="display: none;" accept=".png,.rom">
+<input type="button" id="loadrom" value="Load ROM (and Reset CPU)">
+<input type="button" id="resetcpu" value="Reset CPU">
+</p>
+<h2>SD Card</h2>
+<p>
+<a id="localsaveanchor" style="display: none;"></a>
+<input type="file" id="cfsfile" data-autoload="sdcard.png" style="display: none;" accept=".png,.bfs">
+<input type="button" id="loadcfsauto" value="Load from autosave" disabled>
+<input type="button" id="loadcfs" value="Load from file">
+<input type="button" id="savecfs" value="Save to file">
+<label><input type="checkbox" id="autosavecfs"> Autosave (local storage in browser)</label>
+</p>
+<h2>Console</h2>
+<pre id="terminal" tabindex="0">(Emulator not initialized)</pre>
+
+<p>In case you want to pre-write or paste your text, or are on a mobile device (Hit Enter on an empty field to insert a line break):
+<br/><input type="text" id="buffer" name="buffer" value="" disabled></p>
+
+<!--
+<p>In case you want to pre-write or paste your text, enter hex characters, or are on a mobile device:</p>
+<label class="lbuf" for="buffer">Text buffer:</label><input type="text" id="buffer" name="buffer" value="" disabled><br class="clear">
+<label class="lbuf" for="buffer">Hex buffer:</label><input type="text" id="hexbuffer" name="hexbuffer" value="" pattern="([0-9A-F]{2}( [0-9A-F]{2})*)?" disabled><br class="clear">
+<p>Hit Enter on an empty field to insert a line break.</p>
+-->
+</body>
+</html>
