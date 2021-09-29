@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<office:document xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" xmlns:draw="urn:oasis:names:tc:opendocument:xmlns:drawing:1.0" xmlns:svg="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0" xmlns:loext="urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0" office:version="1.3" office:mimetype="application/vnd.oasis.opendocument.text">
+	<office:font-face-decls>
+		<style:font-face style:name="Liberation Mono" svg:font-family="&apos;Liberation Mono&apos;" style:font-adornments="Standard" style:font-family-generic="modern" style:font-pitch="fixed"/>
+		<style:font-face style:name="Liberation Serif" svg:font-family="&apos;Liberation Serif&apos;" style:font-family-generic="roman" style:font-pitch="variable"/>
+		<style:font-face style:name="Liberation Sans" svg:font-family="&apos;Liberation Sans&apos;" style:font-family-generic="swiss" style:font-pitch="variable"/>
+	</office:font-face-decls>
+	<office:styles>
+		<style:default-style style:family="paragraph">
+			<style:text-properties style:font-name="Liberation Serif" fo:font-size="12pt" style:letter-kerning="true" fo:hyphenate="false"/>
+		</style:default-style>
+		<style:style style:name="Graphics" style:family="graphic">
+			<style:graphic-properties fo:wrap-option="no-wrap" style:flow-with-text="true" svg:width="17cm" style:rel-width="100%" fo:min-height="0.3cm" text:anchor-type="paragraph" style:wrap="none" style:vertical-pos="top" style:vertical-rel="baseline" style:horizontal-pos="center" style:horizontal-rel="paragraph" loext:allow-overlap="true" loext:rel-width-rel="paragraph">
+				<style:columns fo:column-count="1" fo:column-gap="0cm"/>
+			</style:graphic-properties>
+		</style:style>
+		<style:style style:name="Standard" style:family="paragraph" style:class="text"/>
+		<style:style style:name="Text_20_body" style:display-name="Text body" style:family="paragraph" style:parent-style-name="Standard" style:class="text">
+			<style:paragraph-properties fo:margin-top="0cm" fo:margin-bottom="0.25cm" style:contextual-spacing="false"/>
+		</style:style>
+		<style:style style:name="TextFile" style:family="paragraph" style:parent-style-name="Text_20_body">
+			<style:text-properties style:font-name="Liberation Mono" />
+		</style:style>
+		<style:style style:name="BlockContent" style:family="paragraph" style:parent-style-name="TextFile">
+			<style:paragraph-properties fo:margin-left="0.2cm" fo:margin-right="0.2cm" fo:keep-together="always" fo:text-indent="0cm" style:auto-text-indent="false"  fo:padding="0.05cm" fo:border="0.06pt solid #808080" style:join-border="false"/>
+			<style:text-properties fo:font-size="10pt" />
+		</style:style>
+		<style:style style:name="Heading" style:family="paragraph" style:parent-style-name="Standard" style:next-style-name="Text_20_body" style:class="text">
+			<style:paragraph-properties fo:margin-top="0.5cm" fo:margin-bottom="0.2cm" style:contextual-spacing="false" fo:keep-with-next="always"/>
+			<style:text-properties style:font-name="Liberation Sans" fo:font-size="14pt" fo:font-weight="bold"/>
+		</style:style>
+		<style:style style:name="Heading_20_1" style:display-name="Heading 1" style:family="paragraph" style:parent-style-name="Heading" style:next-style-name="Text_20_body" style:default-outline-level="1" style:class="text">
+			<style:paragraph-properties style:page-number="auto" fo:break-before="page" />
+			<style:text-properties fo:font-size="18pt"/>
+		</style:style>
+		<style:style style:name="Heading_20_2" style:display-name="Heading 2" style:family="paragraph" style:parent-style-name="Heading" style:next-style-name="Text_20_body" style:default-outline-level="2" style:class="text">
+			<style:paragraph-properties fo:margin-top="0.3cm"/>
+			<style:text-properties fo:font-size="16pt"/>
+		</style:style>
+		<style:style style:name="Heading_20_3" style:display-name="Heading 3" style:family="paragraph" style:parent-style-name="Heading" style:next-style-name="Text_20_body" style:default-outline-level="3" style:class="text">
+			<style:paragraph-properties fo:margin-top="0.2cm"/>
+			<style:text-properties fo:font-size="15pt"/>
+		</style:style>
+		<style:style style:name="Heading_20_4" style:display-name="Heading 4" style:family="paragraph" style:parent-style-name="Heading" style:next-style-name="Text_20_body" style:default-outline-level="4" style:class="text">
+			<style:paragraph-properties fo:margin-top="0.2cm"/>
+			<style:text-properties fo:font-size="14pt"/>
+		</style:style>
+		<style:style style:name="Contents_20_Heading" style:display-name="Contents Heading" style:family="paragraph" style:parent-style-name="Heading_20_1" style:class="index">
+		</style:style>
+		<style:style style:name="Contents_20_1" style:display-name="Contents 1" style:family="paragraph" style:parent-style-name="Standard" style:class="index">
+			<style:paragraph-properties fo:margin-left="0cm" fo:margin-right="0cm" fo:text-indent="0cm" style:auto-text-indent="false">
+				<style:tab-stops>
+					<style:tab-stop style:position="17cm" style:type="right" style:leader-style="dotted" style:leader-text="."/>
+				</style:tab-stops>
+			</style:paragraph-properties>
+		</style:style>
+		<style:style style:name="Contents_20_2" style:display-name="Contents 2" style:family="paragraph" style:parent-style-name="Index" style:class="index">
+			<style:paragraph-properties fo:margin-left="0.5cm" fo:margin-right="0cm" fo:text-indent="0cm" style:auto-text-indent="false">
+				<style:tab-stops>
+					<style:tab-stop style:position="16.5cm" style:type="right" style:leader-style="dotted" style:leader-text="."/>
+				</style:tab-stops>
+			</style:paragraph-properties>
+		</style:style>
+		<style:style style:name="Contents_20_3" style:display-name="Contents 3" style:family="paragraph" style:parent-style-name="Index" style:class="index">
+			<style:paragraph-properties fo:margin-left="1cm" fo:margin-right="0cm" fo:text-indent="0cm" style:auto-text-indent="false">
+				<style:tab-stops>
+					<style:tab-stop style:position="16cm" style:type="right" style:leader-style="dotted" style:leader-text="."/>
+				</style:tab-stops>
+			</style:paragraph-properties>
+		</style:style>
+		<style:style style:name="Title" style:family="paragraph" style:parent-style-name="Heading" style:next-style-name="Text_20_body" style:class="chapter" style:master-page-name="First_20_Page">
+			<style:paragraph-properties fo:margin-top="8cm" fo:margin-bottom="11cm" style:contextual-spacing="false" fo:text-align="center"/>
+			<style:text-properties fo:font-size="28pt" />
+		</style:style>
+		<style:style style:name="Header" style:family="paragraph" style:parent-style-name="Standard" style:class="extra">
+			<style:paragraph-properties>
+				<style:tab-stops>
+					<style:tab-stop style:position="17cm" style:type="right"/>
+				</style:tab-stops>
+			</style:paragraph-properties>
+		</style:style>
+		<style:style style:name="Internet_20_link" style:display-name="Internet link" style:family="text">
+			<style:text-properties fo:color="#000080" style:text-underline-style="solid" style:text-underline-width="auto" style:text-underline-color="font-color"/>
+		</style:style>
+		<style:style style:name="Index_20_Link" style:display-name="Index Link" style:family="text"/>
+		<style:style style:name="Source_20_Text" style:display-name="Source Text" style:family="text">
+			<style:text-properties style:font-name="Liberation Mono" fo:font-family="&apos;Liberation Mono&apos;" style:font-family-generic="modern" style:font-pitch="fixed"/>
+		</style:style>
+		<style:style style:name="PageLink" style:family="text">
+			<style:text-properties style:text-position="super 58%" fo:font-style="italic"/>
+		</style:style>
+		<style:style style:name="Page_20_Number" style:display-name="Page Number" style:family="text">
+			<style:text-properties fo:font-weight="bold"/>
+		</style:style>
+		<style:style style:name="ColumnTitle" style:family="text">
+			<style:text-properties fo:font-style="italic"/>
+		</style:style>
+		<text:outline-style style:name="Outline">
+			<text:outline-level-style text:level="1" style:num-format="">
+				<style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+					<style:list-level-label-alignment text:label-followed-by="listtab"/>
+				</style:list-level-properties>
+			</text:outline-level-style>
+			<text:outline-level-style text:level="2" style:num-format="1">
+				<style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+					<style:list-level-label-alignment text:label-followed-by="listtab"/>
+				</style:list-level-properties>
+			</text:outline-level-style>
+			<text:outline-level-style text:level="3" style:num-format="1" text:display-levels="2">
+				<style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+					<style:list-level-label-alignment text:label-followed-by="listtab"/>
+				</style:list-level-properties>
+			</text:outline-level-style>
+			<text:outline-level-style text:level="4" style:num-format="">
+				<style:list-level-properties text:list-level-position-and-space-mode="label-alignment">
+					<style:list-level-label-alignment text:label-followed-by="listtab"/>
+				</style:list-level-properties>
+			</text:outline-level-style>
+		</text:outline-style>
+	</office:styles>
+	<office:automatic-styles>
+		<style:style style:name="Sect1" style:family="section">
+			<style:section-properties style:editable="false" />
+		</style:style>
+		<style:page-layout style:name="pm1">
+			<style:page-layout-properties fo:page-width="21cm" fo:page-height="29.7cm" style:num-format="1" style:print-orientation="portrait" fo:margin-top="2cm" fo:margin-bottom="2cm" fo:margin-left="2cm" fo:margin-right="2cm" style:writing-mode="lr-tb" />
+			<style:header-style>
+				<style:header-footer-properties fo:min-height="1cm" fo:margin-left="0cm" fo:margin-right="0cm" fo:margin-bottom="0.5cm" fo:border-top="none" fo:border-bottom="0.26pt solid #808080" fo:border-left="none" fo:border-right="none" fo:padding="0.05cm" fo:background-color="transparent" style:dynamic-spacing="false" draw:fill="none"/>
+			</style:header-style>
+			<style:footer-style/>
+		</style:page-layout>
+		<style:page-layout style:name="pm2">
+			<style:page-layout-properties fo:page-width="21cm" fo:page-height="29.7cm" style:num-format="1" style:print-orientation="portrait" fo:margin-top="2cm" fo:margin-bottom="2cm" fo:margin-left="2cm" fo:margin-right="2cm" style:writing-mode="lr-tb"  />
+			<style:header-style/>
+			<style:footer-style/>
+		</style:page-layout>
+	</office:automatic-styles>
+	<office:master-styles>
+		<style:master-page style:name="Standard" style:page-layout-name="pm1">
+			<style:header>
+				<text:p text:style-name="Header"><text:span text:style-name="ColumnTitle"><text:chapter text:display="number" text:outline-level="3" /> <text:chapter text:display="name" text:outline-level="3" /></text:span><text:tab/><text:span text:style-name="Page_20_Number"><text:page-number text:select-page="current"/></text:span></text:p>
+			</style:header>
+			<style:header-left>
+				<text:p text:style-name="Header"><text:span text:style-name="Page_20_Number"><text:page-number text:select-page="current" /></text:span><text:tab/><text:span text:style-name="ColumnTitle"><text:chapter text:display="number" text:outline-level="2" /> <text:chapter text:display="name" text:outline-level="2" /></text:span></text:p>
+			</style:header-left>
+		</style:master-page>
+		<style:master-page style:name="First_20_Page" style:display-name="First Page" style:page-layout-name="pm2" style:next-style-name="Standard"/>
+	</office:master-styles>
+	<office:body>
+		<office:text text:use-soft-page-breaks="true">
+			<text:p text:style-name="Title">Collapse OS Documentation</text:p>
+			<text:p text:style-name="Text_20_body">Collapse OS and its documentation are created by Virgil Dupras and licensed under the GNU GPL v3.</text:p>
+			<text:p text:style-name="Text_20_body">This document was created at #TIMESTAMP# from documentation in CollapseOS snapshot #SNAPSHOT#.</text:p>
+			<text:section text:style-name="Sect1" text:name="TOC1">
+				<text:section text:style-name="Sect1" text:name="TOC1_Head">
+					<text:table-of-content text:style-name="Sect1" text:protected="true" text:name="TOC1">
+						<text:table-of-content-source text:outline-level="3">
+							<text:index-title-template text:style-name="Contents_20_Heading">Table of contents</text:index-title-template>
+							<text:table-of-content-entry-template text:outline-level="1" text:style-name="Contents_20_1">
+								<text:index-entry-link-start text:style-name="Index_20_Link"/>
+								<text:index-entry-chapter/>
+								<text:index-entry-text/>
+								<text:index-entry-tab-stop style:type="right" style:leader-char="."/>
+								<text:index-entry-page-number/>
+								<text:index-entry-link-end/>
+							</text:table-of-content-entry-template>
+							<text:table-of-content-entry-template text:outline-level="2" text:style-name="Contents_20_2">
+								<text:index-entry-link-start text:style-name="Index_20_Link"/>
+								<text:index-entry-chapter/>
+								<text:index-entry-text/>
+								<text:index-entry-tab-stop style:type="right" style:leader-char="."/>
+								<text:index-entry-page-number/>
+								<text:index-entry-link-end/>
+							</text:table-of-content-entry-template>
+							<text:table-of-content-entry-template text:outline-level="3" text:style-name="Contents_20_3">
+								<text:index-entry-link-start text:style-name="Index_20_Link"/>
+								<text:index-entry-chapter/>
+								<text:index-entry-text/>
+								<text:index-entry-tab-stop style:type="right" style:leader-char="."/>
+								<text:index-entry-page-number/>
+								<text:index-entry-link-end/>
+							</text:table-of-content-entry-template>
+						</text:table-of-content-source>
+						<text:index-body>
+							<text:index-title text:style-name="Sect2" text:name="Inhaltsverzeichnis1_Head">
+								<text:h text:style-name="Contents_20_Heading" text:outline-level="1">Refresh Table of contents!</text:h>
+							</text:index-title>
+						</text:index-body>
+					</text:table-of-content>
+				</text:section>
+			</text:section>
+			<text:h text:style-name="Heading_20_1" text:outline-level="1">Documentation Files</text:h>
+			<text:p>#CONTENT#</text:p>
+			<text:h text:style-name="Heading_20_1" text:outline-level="1">Block filesystem</text:h>
+			<text:p>#BLKFS#</text:p>
+		</office:text>
+	</office:body>
+</office:document>

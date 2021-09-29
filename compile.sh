@@ -15,6 +15,9 @@ fi
 cd ..
 rm -rf build
 mkdir -p build
+cd pdf
+./build.pl >../build/collapseos.fodt
+cd ..
 perl -n - emul0-xcomp.fs >build/emul0-bootstrap.fs <<'EOF'
 sub printblock {
 	my $num = $_[0];
