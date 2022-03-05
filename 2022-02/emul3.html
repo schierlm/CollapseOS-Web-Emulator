@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<head>
+<meta charset="utf-8">
+<title>Emulator 3 (Game console) &ndash; Collapse OS Web Emulators</title>
+<script type="text/javascript" src="utils.js"></script>
+<script type="text/javascript" src="emul.js"></script>
+<script type="text/javascript" src="z80vm.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/DrGoldfire/Z80.js@2304ae274d49bc43e26067a2c0dd329c57305425/Z80.js"></script>
+<style type="text/css">
+body { font-family: Verdana, Arial, Helvetica, sans-serif; }
+#keypad th, #keypad td {width: 64px; height: 64px;}
+#keypad th {border: 1px solid; margin: 3px; background-color: #eee; cursor: pointer;}
+#keypad th:hover {background-color: #888;}
+#keypad th.clicked {background-color: #e88;}
+#vdpscreen {border: 1px solid blue; }
+</style>
+</head>
+<body>
+<h1>Emulator 3 (Game console) &ndash; <a href="index.html">Collapse OS Web Emulators</a></h1>
+<h2>CPU/ROM</h2>
+<p><span id="romstatus">No ROM loaded.</span>
+<input type="file" id="romfile" data-autoload="emul3.png" style="display: none;" accept=".png,.rom">
+<input type="button" id="loadrom" value="Load ROM (and Reset CPU)">
+<input type="button" id="resetcpu" value="Reset CPU">
+</p>
+<h2>SD Card</h2>
+<p>
+<a id="localsaveanchor" style="display: none;"></a>
+<input type="file" id="cfsfile" data-autoload="sdcard.png" style="display: none;" accept=".png,.bfs">
+<input type="button" id="loadcfsauto" value="Load from autosave" disabled>
+<input type="button" id="loadcfs" value="Load from file">
+<input type="button" id="savecfs" value="Save to file">
+<label><input type="checkbox" id="autosavecfs"> Autosave (local storage in browser)</label>
+</p>
+<h2>Screen</h2>
+<canvas id="vdpscreen" width="256" height="192" tabindex="0"></canvas>
+<h2>Keypad</h2>
+<table id="keypad">
+<tr><td></td><th>Up</th><td></td><td></td><td></td><th>Start</th><td></td></tr>
+<tr><th>Left</th><td></td><th>Right</th><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><th>Down</th><td></td><td></td><th>A</th><th>B</th><th>C</th></tr>
+</table>
+</body>
+</html>
