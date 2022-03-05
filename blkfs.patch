@@ -3,47 +3,50 @@
 @@ -12,11 +12,14 @@
  370 TI-84+ LCD                 375 TI-84+ Keyboard
  380 TRS-80 4P drivers
- 395 Dan SBC drivers
+ 395 Dan SBC drivers            410 Virgil's workspace
 +
 +500 AVR        600 8086        700 6809       800 6502
  ( ----- 001 )
  \ Z80 port's Macros and constants. See doc/code/z80.txt
- : Z80A ASML 320 327 LOADR 310 LOAD ( HAL flow ) ASMH ;
- : Z80C 302 308 LOADR ; : Z80H 310 314 LOADR ;
+ : Z80A 320 328 LOADR 7 LOAD ( Flow words ) ;
+ : Z80C 302 314 LOADR ;
  : TRS804PM 380 LOAD ;
 +: XARCHM 501 LOAD 601 LOAD 701 LOAD 801 LOAD ;
  \ see comment at TICKS' definition
  \ 7.373MHz target: 737t. outer: 37t inner: 16t
  \ tickfactor = (737 - 37) / 16
-@@ -998,15 +1001,17 @@
-   DUP 4 = IF VD_CURCL [ VID_WDTH 28 - LITN ] > IF
-     [ VID_WDTH 24 - LITN ] ELSE VD_CURCL 4 + THEN
-     [*TO] VD_CURCL DROP 0 THEN DUP UNTIL ;
+@@ -1131,16 +1134,18 @@
+ ( ----- 116 )
+ \ xcomp for my TRS80 4P, part 4
+ : INIT GRID$ KBD$ BLK$ FD$ ;
 +( ----- 199 )
 +
  ( ----- 000 )
  AVR MASTER INDEX
  
 -301 AVR macros                 302 AVR assembler
--320 SMS PS/2 controller
+-320 SMS PS/2 controller        345 Arduino blinker
+-350 Arduino SPI spitter
 +501 AVR macros                 502 AVR assembler
-+520 SMS PS/2 controller
++520 SMS PS/2 controller        545 Arduino blinker
++550 Arduino SPI spitter
  
  ( ----- 001 )
--: AVRA ASML 302 312 LOADR ;
+-: AVRA 302 312 LOADR ;
 -: ATMEGA328P 315 LOAD ;
-+: AVRA ASML 502 512 LOADR ;
++: AVRA 502 512 LOADR ;
 +: ATMEGA328P 515 LOAD ;
  ( ----- 002 )
  \ AVR assembler. See doc/asm/avr.txt.
  \ We divide by 2 because each PC represents a word.
-@@ -1427,16 +1432,18 @@
- ' BRNE AGAIN?, \ no? loop
- R16 $1 ANDI,
- RET,
+@@ -1601,16 +1606,18 @@
+   R1 TST, ' BRNE AGAIN?, \ end main
+ R16 $00 LDI, UCSR0B R16 STS, \ Disable UART
+ BEGIN, AGAIN, \ end program
 +( ----- 099 )
 +
  ( ----- 000 )
+ : C>!, BX 0 MOVxI, BL 0 ADCi,
  8086 MASTER INDEX
  
 -301 8086 boot code             306 8086 HAL
@@ -52,19 +55,17 @@
 +611 8086 assembler             620 8086 drivers
  ( ----- 001 )
  \ 8086 macros
--: 8086A ASML 311 317 LOADR 306 LOAD ( HAL flow ) ASMH ;
--: 8086C 302 305 LOADR ;
--: 8086H 306 310 LOADR ;
-+: 8086A ASML 611 617 LOADR 606 LOAD ( HAL flow ) ASMH ;
-+: 8086C 602 605 LOADR ;
-+: 8086H 606 610 LOADR ;
- 1 VALUE JROPLEN -1 VALUE JROFF
+-: 8086A 5 LOAD ( wordtbl ) 311 318 LOADR 7 LOAD ( Flow ) ;
+-: 8086C 302 309 LOADR ;
++: 8086A 5 LOAD ( wordtbl ) 611 618 LOADR 7 LOAD ( Flow ) ;
++: 8086C 602 609 LOADR ;
  ( ----- 002 )
- \ 8086 boot code. PS=SP, RS=BP, IP=DX
-@@ -1682,18 +1689,20 @@
- CODE _spit ( c )
-   POPp, AH $0e MOVri, ( print char ) $10 INT, ;CODE
- : CELL! ( c pos -- ) 0 CURSOR! _spit ;
+ \ 8086 boot code. PS=SP, RS=BP, IP=DX, TOS=BX
+ FJR JRi, TO L1 ( main ) \ 03=boot driveno
+@@ -1877,21 +1884,23 @@
+   AL BL MOVrr, BX POPx, AH $0e MOVri, $10 INT, ;CODE
+ : CELL! ( c pos -- ) 0 CURSOR! _ ;
+ : NEWLN ( old -- new ) 1+ DUP LINES = IF 1- CR ~ LF ~ THEN ;
 +( ----- 099 )
 +
  ( ----- 000 )
@@ -73,41 +74,57 @@
 -301 6809 macros                302 6809 boot code
 -306 6809 HAL                   311 6809 assembler
 -320 TRS-80 Color Computer 2
+-325 6809 disassembler          340 6809 emulator
+-360 Virgil's workspace
 +701 6809 macros                702 6809 boot code
 +706 6809 HAL                   711 6809 assembler
 +720 TRS-80 Color Computer 2
++725 6809 disassembler          740 6809 emulator
++760 Virgil's workspace
  ( ----- 001 )
  ( 6809 declarations )
--: 6809A ASML 311 318 LOADR 306 LOAD ( HAL flow ) ASMH ;
--: 6809C 302 305 LOADR ;
--: 6809H 306 310 LOADR ;
--: COCO2 320 322 LOADR ;
-+: 6809A ASML 711 718 LOADR 706 LOAD ( HAL flow ) ASMH ;
-+: 6809C 702 705 LOADR ;
-+: 6809H 706 710 LOADR ;
-+: COCO2 720 722 LOADR ;
- 1 VALUE JROPLEN -1 VALUE JROFF
+-: 6809A 310 318 LOADR 7 LOAD ( flow ) ;
+-: 6809C 302 308 LOADR ; 
+-: 6809D 325 335 LOADR ; : 6809E 340 354 LOADR ;
+-: COCO2 320 LOAD 322 324 LOADR ;
+-: DGN32 321 LOAD 322 324 LOADR ;
++: 6809A 710 718 LOADR 7 LOAD ( flow ) ;
++: 6809C 702 708 LOADR ; 
++: 6809D 725 735 LOADR ; : 6809E 740 754 LOADR ;
++: COCO2 720 LOAD 722 724 LOADR ;
++: DGN32 721 LOAD 722 724 LOADR ;
  ( ----- 002 )
- ( 6809 Boot code. IP=Y, PS=S, RS=U  ) HERE TO ORG
-@@ -1964,15 +1973,17 @@
-     SWAP $400 + C! ELSE 2DROP THEN ;
- : CURSOR! ( new old -- )
-   DROP $400 + DUP C@ $40 XOR SWAP C! ;
+ ( 6809 Boot code. IP=Y, PS=S, RS=U  )
+ FJR JRi, TO L1 ( main ) $0a ALLOT0
+@@ -2517,20 +2526,22 @@
+ HERE MEM $100 + 'HERE !
+ $42 # LDA, $56 # ADDA, $12 <> STA, $12 <> SUBB, SYNC,
+ 'HERE !
 +( ----- 099 )
 +
  ( ----- 000 )
  6502 MASTER INDEX
  
 -301 6502 macros and consts     302 6502 assembler
--310 6502 boot code
+-310 6502 boot code             330 6502 disassembler
+-335 6502 emulator              350 Virgil's workspace
+-360 Apple IIe drivers
 +801 6502 macros and consts     802 6502 assembler
-+810 6502 boot code
++810 6502 boot code             830 6502 disassembler
++835 6502 emulator              850 Virgil's workspace
++860 Apple IIe drivers
  ( ----- 001 )
  \ 6502 macros and constants. See doc/code/6502.txt
--: 6502A ASML 302 305 LOADR ;
--: 6502C 310 311 LOADR ;
-+: 6502A ASML 802 805 LOADR ;
-+: 6502C 810 811 LOADR ;
- 1 VALUE JROPLEN -1 VALUE JROFF
- ( ----- 002 )
- \ 6502 assembler, Addressing modes.
+-: 6502A 302 305 LOADR 7 LOAD ( flow ) ;
+-: 6502M 309 LOAD ;
+-: 6502C 310 320 LOADR ;
+-: 6502D 330 334 LOADR ;
+-: 6502E 335 342 LOADR ;
++: 6502A 802 805 LOADR 7 LOAD ( flow ) ;
++: 6502M 809 LOAD ;
++: 6502C 810 820 LOADR ;
++: 6502D 830 834 LOADR ;
++: 6502E 835 842 LOADR ;
+ \ ZP assignments
+ $06 CONSTANT 'A
+ $08 CONSTANT 'N

@@ -53,8 +53,8 @@ if (/#=/) {
 	print;
 }
 EOF
-sed -i "s/^'?/( ((( ) '?/g;s/CELLS! NOT \[IF\]/CELLS! NOT \[IF\]( ))) )/g;s/THEN\]$/THEN\] ( ))) )/g;s/THEN DROP ; \[THEN\]/THEN DROP ; ( ((( ) \[THEN\]/g;s/^\\\\ # //g" build/emul0-bootstrap.fs
-echo 'ORG 256 /MOD 2 PC! 2 PC! HERE 256 /MOD 2 PC! 2 PC!' >>build/emul0-bootstrap.fs
+sed -i "s/^'?/( ((( ) '?/g;s/CELLS! NOT \[IF\]/CELLS! NOT \[IF\]( ))) )/g;s/THEN\]$/THEN\] ( ))) )/g;s/THEN DROP ; \[THEN\]/THEN DROP ; ( ((( ) \[THEN\]/g;s/: XWRAP COREH/: XWRAP/g;s/ALIAS NOOP \[THEN\] ( ))) )/ALIAS NOOP \[THEN\]/g;s/^\\\\ # //g" build/emul0-bootstrap.fs
+echo 'XORG 256 /MOD 2 PC! 2 PC! HERE 256 /MOD 2 PC! 2 PC!' >>build/emul0-bootstrap.fs
 cat collapseos/arch/z80/blk.fs collapseos/arch/avr/blk.fs collapseos/arch/8086/blk.fs \
         collapseos/arch/6809/blk.fs collapseos/arch/6502/blk.fs >build/combined.fs
 patch -d build <blkfs.patch

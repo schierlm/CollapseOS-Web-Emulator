@@ -17,18 +17,24 @@ my @filelist = split($/, <<'DONE');
 		impl.txt
 		dict.txt
 		blk.txt
+		rxtx.txt
+		blksrv.txt
+		design.txt
 		ed.txt
 		me.txt
-		rsh.txt
+		dis.txt
+		emul.txt
 		avr.txt
-		hal.txt
+		wordtbl.txt
 		cross.txt
 		arch.txt
 		bootstrap.txt
-		protocol.txt
+		drivers.txt
 		grid.txt
+		ps2.txt
 		sega.txt
 		selfhost.txt
+		algo.txt
 		faq.txt
 	=Assemblers
 		asm/intro.txt
@@ -42,14 +48,15 @@ my @filelist = split($/, <<'DONE');
 		code/z80.txt
 		code/8086.txt
 		code/6809.txt
+		code/6502.txt
 	=Hardware documentation
 		hw/intro.txt
 		hw/acia.txt
 		hw/at28.txt
 		hw/avr.txt
-		hw/sdcard.txt
-		hw/spi.txt
 		hw/tty.txt
+		sdcard.txt
+		spi.txt
 	=Hardware: z80 hardware interfaces
 		hw/z80/ps2.txt
 		PS/2 Connector!653x259!hw/z80/img/ps2-conn.png
@@ -80,35 +87,40 @@ my @filelist = split($/, <<'DONE');
 	=Hardware: 6502 based devices
 		hw/6502/appleiie/intro.txt
 		hw/6502/appleiie/monitor.txt
+		hw/6502/appleiie/spihack.txt
 	=Hardware: Various other devices
 		hw/8086/pcat.txt
 		hw/6809/coco2.txt
-		hw/arduinouno/at28.txt
-		AT28 R/W!720x633!hw/arduinouno/img/at28wr.jpg
+		hw/avr/at28.txt
+		AT28 R/W!720x633!hw/avr/img/at28wr.jpg
+		hw/avr/spispit.txt
 DONE
 
 my @blkfslist = split($/, <<'DONE');
 	Architecture independent@../blk.fs
 		Master Index: 0
-		Common assembler words: 2-3
-		Block editor: 100-111
-		Memory editor: 115-119
-		Useful little words: 120-123
-		Remote Shell: 150-154
-		AVR SPI programmer: 160-163
-		Sega ROM signer: 165
+		Useful little words: 1-5
+		Pager: 6
+		Flow words: 7
+		RX/TX tools: 10-15
+		Block editor: 20-24
+		Visual editor: 25-32
+		Memory editor: 35-39
+		AVR SPI programmer: 40-43
+		Sega ROM signer: 45
 		Cross compilation: 200-205
-		Core words: 207-229
+		Core words: 210-229
 		BLK subsystem: 230-234
+		RX/TX subsystem: 235
 		Grid subsystem: 240-241
 		PS/2 keyboard subsystem: 245-248
 		SD Card subsystem: 250-258
 		Fonts: 260-276
+		Automated tests: 290-296
 	Z80@../arch/z80/blk.fs
 		Architecture index: 300
-		Z80 boot code: 301-308
-		Z80 HAL: 310-314
-		Z80 assembler: 320-327
+		Z80 boot code: 301-314
+		Z80 assembler: 320-328
 		AT28 EEPROM: 330
 		SPI relay: 332
 		TMS9918: 335-337
@@ -121,32 +133,42 @@ my @blkfslist = split($/, <<'DONE');
 		SMS Ports: 368-369
 		TI-84+ LCD: 370-373
 		TI-84+ Keyboard: 375-379
-		TRS-80 4P drivers: 380-390
+		TRS-80 4P drivers: 380-391
 		Dan SBC drivers: 395-409
+		Virgil's workspace: 410-416
 	AVR@../arch/avr/blk.fs
 		Architecture index: 300
 		AVR macros: 301
 		AVR assembler: 302-312
 		ATmega328P definitions: 315
 		SMS PS/2 controller: 320-342
+		Arduino blinker: 345
+		Arduino SPI spitter: 350-351
 	8086@../arch/8086/blk.fs
 		Architecture index: 300
-		8086 boot code: 301-305
-		8086 HAL: 306-310
-		8086 assembler: 311-317
+		8086 boot code: 301-309
+		8086 assembler: 311-318
 		8086 drivers: 320-324
-        6809@../arch/6809/blk.fs
+	6809@../arch/6809/blk.fs
 		Architecture index: 300
 		6809 macros: 301
 		6809 boot code: 302-305
 		6809 HAL: 306-310
 		6809 assembler: 311-318
-		TRS-80 Color Computer 2: 320-322
+		TRS-80 Color Computer 2: 320-324
+		6809 disassembler: 325-335
+		6809 emulator: 340-354
+		Virgil's workspace: 360
 	6502@../arch/6502/blk.fs
 		Architecture index: 300
 		6502 macros and consts: 301
-		6502 assembler: 302-305
-		6502 boot code: 310-311
+		6502 assembler: 302-307
+		6502 port macros: 309
+		6502 boot code: 310-320
+		6502 disassembler: 330-334
+		6502 emulator: 335-342
+		Virgil's workspace: 350-355
+		Apple IIe drivers: 360-362
 DONE
 
 sub escapeText {
@@ -189,6 +211,8 @@ sub makeLink {
 		$dest = 'hw/z80/ps2.txt' if $dest eq 'hw/ps2.txt';
 		$dest = 'hw/z80/sms/ps2.txt' if $dest eq 'smsps2.txt';
 		$dest = 'asm/avr.txt' if $dest eq 'asm.txt' and $context eq 'hw/avr.txt';
+		$dest = 'spi.txt' if $dest eq 'hw/spi.txt';
+		$dest = 'wordtbl.txt' if $dest eq 'hal.txt';
 	}
 	unless (defined $filenames{$dest} and $filenames{$dest} == 1) {
 		die "Unsupported name " . $dest . " in " . $context . $/;

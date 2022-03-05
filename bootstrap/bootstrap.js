@@ -164,7 +164,7 @@ function addWord(val) {
 }
 
 function addWordref(word, allowImmediate) {
-	var wordref = forthState.main.find(forthState, forthState.xcomp.current, word);
+	var wordref = findFunc(forthState, forthState.xcomp.current, word);
 	if (wordref == 0) throw "word not found in compiled dictionary: "+word;
 	if (!allowImmediate && (forthState.ram[wordref-1] & 0x80) != 0) {
 		throw "cannot compile wordref to immediate word: " + word;
@@ -188,6 +188,7 @@ function addEntry(state) {
 }
 
 function addEntryByName(state, name) {
+	state.xcomp.entries[name] = 1;
 	for(var i = 0; i < name.length; i++) {
 		addByte(name.charCodeAt(i));
 	}
@@ -196,7 +197,31 @@ function addEntryByName(state, name) {
 	state.xcomp.current = state.xcomp.here;
 }
 
+function findFunc(state, current, word) {
+	while (current != 0) {
+		var len = state.ram[current-1] & 0x7f;
+		if (len == word.length) {
+			var found = true;
+			for(var i = 0; i < len; i++) {
+				if (state.ram[current - 3 - len + i] != word.charCodeAt(i)) {
+					found = false;
+					break;
+				}
+			}
+			if (found) return current;
+		}
+		current = state.readWord(current - 3);
+		if (isNaN(current)) throw "dictionary corrupted while searching word "+word;
+	}
+	return 0;
+}
+
 function interpretWord(word) {
+	if (word.length > 2 && word.substring(word.length - 2) == "+2") {
+		addByte(forthState.xcomp.builtins[word.substring(0, word.length - 2)].funcIndex);
+		addWord(forthState.main.ppop(forthState));
+		return;
+	}
 	var func = nFuncs[word];
 	if (func == undefined)
 		func = forthState.xcomp.builtins[word];
@@ -255,14 +280,6 @@ var immFuncs = {
 		immFuncs.THEN(state);
 		state.main.ppush(state, state.xcomp.here - 1);
 	},
-	"DO": function(state) {
-		addWordref("2>R");
-		state.main.ppush(state, state.xcomp.here);
-	},
-	"LOOP": function(state) {
-		addWordref("(loop)");
-		addByte(relativeOffset(state));
-	},
 	"BEGIN": function(state) {
 		state.main.ppush(state, state.xcomp.here);
 	},
@@ -272,6 +289,10 @@ var immFuncs = {
 	},
 	"UNTIL": function(state) {
 		addWordref("(?br)");
+		addByte(relativeOffset(state));
+	},
+	"NEXT": function(state) {
+		addWordref("(next)");
 		addByte(relativeOffset(state));
 	},
 	'LIT"': function(state) {
@@ -289,12 +310,15 @@ var immFuncs = {
 		addLiteral(start + 1);
 		addLiteral(len);
 	},
+	"~": function(state) {
+		addWord(state.readWord(0xe012));
+	},
 	"[COMPILE]": function(state) {
 		addWordref(readWord(), true);
 	},
 	"COMPILE": function(state) {
 		var word = readWord();
-		var wordref = forthState.main.find(forthState, forthState.xcomp.current, word);
+		var wordref = findFunc(forthState, forthState.xcomp.current, word);
 		if (wordref == 0) throw "word for COMPILE not found in compiled dictionary: "+word;
 		addLiteral(wordref);
 		addWordref(",");
@@ -303,21 +327,17 @@ var immFuncs = {
 		addWordref("(n)");
 		addWordref(readWord(), true);
 	},
-	"[*TO]": function(state) {
-		var word = readWord();
-		var wordref = forthState.main.find(forthState, forthState.xcomp.current, word);
-		if (wordref == 0) throw "word for [*TO] not found in compiled dictionary: "+word;
-		addLiteral(wordref);
-		addWordref("*VAL!");
-	},
 };
 
 
 var nFuncs = {
 	"SYSVARS": makeConstant(SYSVARS),
 	"GRID_MEM": makeConstant(SYSVARS+0x80),
-	"JROFF": makeConstant(0),
-	"JROPLEN": makeConstant(1),
+	"RXTX_MEM": makeConstant(SYSVARS+0x80+2),
+	"BLK_MEM": makeConstant(SYSVARS-0x409),
+	"'A": makeConstant(SYSVARS+0x06),
+	"XORG": makeConstant(0),
+	"BS": makeConstant(0x08),
 	"(": immFuncs["("],
 	"T!": function(state) {
 		var addr = state.main.ppop(state);
@@ -330,15 +350,21 @@ var nFuncs = {
 			addByte(0);
 		}
 	},
-	"ORG": makeValue(0xe000), // some unused consecutive addresses
-	"BIN(": makeValue(0xe002),
+	"C,": function(state) {
+		var val = state.main.ppop(state);
+		addByte(val);
+	},
+	"BIN(": makeValue(0xe000), // some unused consecutive addresses
 	"lblnext": makeValue(0xe004),
 	"lblcell": makeValue(0xe006),
 	"lbldoes": makeValue(0xe008),
-	"lblpush": makeValue(0xe00a),
 	"lblxt": makeValue(0xe00c),
-	"L1": makeValue(0xe00e),
+	"lblval": makeValue(0xe010),
+	"'~": makeConstant(0xe012),
 	"HERE": function(state) {
+		state.main.ppush(state, state.xcomp.here);
+	},
+	"PC": function(state) {
 		state.main.ppush(state, state.xcomp.here);
 	},
 	"XCURRENT": function(state) {
@@ -348,44 +374,55 @@ var nFuncs = {
 		addEntry(state);
 	},
 	";CODE": function(state) {
-		addByte(11); // JMPi,
-		addWord(0); // lblnext
+		interpretWords("lblnext", "JMPi,+2");
+	},
+	"CREATE": function(state) {
+		addEntry(state),
+		interpretWords("lblcell", "CALLi,+2");
+	},
+	',"': function(state) {
+		var ch = scriptBuffer.charCodeAt(scriptPos++);
+		while(ch != '"'.charCodeAt(0)) {
+			addByte(ch);
+			ch = scriptBuffer.charCodeAt(scriptPos++);
+			if (isNaN(ch)) throw "unterminated string literal";
+		}
 	},
 	"ALIAS": function(state) {
+		var word = readWord();
 		addEntry(state);
-		addByte(11); // JMPi,
-		addWord(state.main.ppop(state));
+		addByte(forthState.xcomp.builtins["JMPi,"].funcIndex);
+		addWordref(word);
 	},
 	"*ALIAS": function(state) {
 		addEntry(state);
-		interpretWords("(i)>w,", "JMPw,");
+		interpretWords("JMP(i),+2");
 	},
-	"VALUE": function(state) {
+	"CONSTANT": function(state) {
 		addEntry(state);
-		interpretWord("i>w,");
-		addByte(11); // JMPi,
-		addWord(3); // lblpush
+		interpretWords("i>,+2", "lblnext", "JMPi,+2");
 	},
 	"*VALUE": function(state) {
 		addEntry(state);
-		interpretWord("(i)>w,");
-		addByte(11); // JMPi,
-		addWord(3); // lblpush
+		interpretWords("(i)>,+2", "lblnext", "JMPi,+2");
 	},
-	"VALUES": function(state) {
+	"CONSTS": function(state) {
 		var count = state.main.ppop(state);
 		for(var i = 0; i < count; i++) {
+			var word = readWord();
+			if (/^-?[0-9]+$|^[0$][0-9a-fA-F]+$/.test(word)) {
+				interpretWord(word);
+			} else {
+				throw "Invalid constant: "+word;
+			}
 			var name = readWord();
 			addEntryByName(state, name);
-			interpretWords(readWord(), "i>w,");
-			addByte(11); // JMPi,
-			addWord(3); // lblpush
+			interpretWords("i>,+2", "lblnext", "JMPi,+2");
 		}
 	},
-	":": function(state) {
-		addEntry(state);
-		addByte(47); // CALLi,
-		addWord(1); // lblxt
+	":~": function(state) {
+		state.writeWord(0xe012, state.xcomp.here);
+		interpretWords("lblxt", "CALLi,+2");
 		while(true) {
 			var word = readWord();
 			if (word == "" || word == ";")
@@ -403,6 +440,55 @@ var nFuncs = {
 		}
 		addWordref("EXIT");
 	},
+	":": function(state) {
+		addEntry(state);
+		interpretWords("lblxt", "CALLi,+2");
+		while(true) {
+			var word = readWord();
+			if (word == "" || word == ";")
+				break;
+			var func = immFuncs[word];
+			if (func !== undefined) {
+				func(forthState);
+			} else if (/^-?[0-9]+$|^[0$][0-9a-fA-F]+$/.test(word)) {
+				addLiteral(word.replace('$','0x')-0|0);
+			} else if (/^'.'$/.test(word)) {
+				addLiteral(word.charCodeAt(1) | 0);
+			} else {
+				addWordref(word)
+			}
+		}
+		addWordref("EXIT");
+	},
+	"?:": function(state) {
+		var name = readWord();
+		if (state.xcomp.entries[name]) {
+			while(true) {
+				var word = readWord();
+				if (word == "" || word == ";")
+					break;
+			}
+		} else {
+			addEntryByName(state, name);
+			interpretWords("lblxt", "CALLi,+2");
+			while(true) {
+				var word = readWord();
+				if (word == "" || word == ";")
+					break;
+				var func = immFuncs[word];
+				if (func !== undefined) {
+					func(forthState);
+				} else if (/^-?[0-9]+$|^[0$][0-9a-fA-F]+$/.test(word)) {
+					addLiteral(word.replace('$','0x')-0|0);
+				} else if (/^'.'$/.test(word)) {
+					addLiteral(word.charCodeAt(1) | 0);
+				} else {
+					addWordref(word)
+				}
+			}
+			addWordref("EXIT");
+		}
+	},
 	"LITN": function(state) {
 		addLiteral(state.main.ppop(state));
 	},
@@ -415,45 +501,9 @@ var nFuncs = {
 			throw "Not a VALUE: "+word;
 		nFuncs[word].toHandler(state, state.main.ppop(state));
 	},
-	"BEGIN,": function(state) {
-		var value = state.main.ppush(state, state.xcomp.here);
-	},
-	"BR": function(state) {
-		var value = state.main.ppop(state);
-		value -= state.xcomp.here;
-		value--;
-		state.main.ppush(state, value);
-	},
-	"LSET": function(state) {
-		var word = readWord();
-		if (nFuncs[word] === undefined || nFuncs[word].toHandler === undefined)
-			throw "Not a VALUE: "+word;
-		nFuncs[word].toHandler(state, state.xcomp.here);
-	},
-	"FJR": function(state) {
-		state.main.ppush(state, state.xcomp.here + 1);
-		state.main.ppush(state, 0);
-	},
-	"IFNZ,": function(state) { interpretWords("Z?", "FJR", "?JRi,"); },
-	"IFC,": function(state) { interpretWords("C?", "^?", "FJR", "?JRi,"); },
-	"THEN,": function(state) {
-		var label = state.main.ppop(state);
-		var addr = label;
-		state.ram[addr] = state.xcomp.here - label;
-	},
 	"+": function(state) {
 		var b = state.main.ppop(state), a = state.main.ppop(state);
 		state.main.ppush(state, a + b);
-	},
-	"-": function(state) {
-		var b = state.main.ppop(state), a = state.main.ppop(state);
-		state.main.ppush(state, a - b);
-	},
-	"X'": function(state) {
-		var word = readWord();
-		var wordref = forthState.main.find(forthState, forthState.xcomp.current, word);
-		if (wordref == 0) throw "word for X' not found in compiled dictionary: "+word;
-		state.main.ppush(state, wordref);
 	},
 	'XWRAP': function(state) {
 		state.main.ppush(state, 0x4000);
@@ -479,31 +529,13 @@ function bootstrapStage1() {
 		forthState = initForthState(ioRead, ioWrite, true);
 		forthState.psp = PS_ADDR;
 		forthState.rsp = RS_ADDR;
-		forthState.xcomp = {current: 0, here: 0, builtins: {}};
-		for(var i = 0; i < forthState.nativew.length; i++) {
-			var f = forthState.nativew[i];
-			forthState.xcomp.builtins[f.funcname] = f;
-		}
+		forthState.xcomp = {current: 0, here: 0, builtins: {}, entries: {}};
 		for(var i = 0; i < forthState.halops.length; i++) {
-			(function(i) {
-				var f = forthState.halops[i];
-				var name = f.funcname;
-				if (name.length > 2 && name.substring(name.length - 2) == "+1") {
-					forthState.xcomp.builtins[name.substring(0, name.length - 2)] = function(state) {
-						addByte(i);
-						addByte(state.main.ppop(state));
-					}
-				} else if (name.length > 2 && name.substring(name.length - 2) == "+2") {
-					forthState.xcomp.builtins[name.substring(0, name.length - 2)] = function(state) {
-						addByte(i);
-						addWord(state.main.ppop(state));
-					}
-				} else {
-					forthState.xcomp.builtins[name] = function(state) {
-						addByte(i);
-					}
-				}
-			})(i);
+			var f = forthState.halops[i];
+			if (f === null)
+				continue;
+			forthState.xcomp.builtins[f.funcname] = f;
+			forthState.xcomp.builtins[f.funcname].funcIndex = i;
 		}
 		while (true) {
 			var word = readWord();
