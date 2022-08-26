@@ -86,7 +86,7 @@ function ioWrite(port, value) {
 
 // STAGE 2 CODE //
 
-var SYSVARS = 0xfe70, RS_ADDR = 0xff00, PS_ADDR = 0xfffa;
+var SYSVARS = 0xfe00, RS_ADDR = 0xff00, PS_ADDR = 0xfffa;
 
 function runStage2() {
 	try {
@@ -217,6 +217,9 @@ function findFunc(state, current, word) {
 }
 
 function interpretWord(word) {
+	if (word == "JMPi,") {
+		word = "JMPi,+2";
+	}
 	if (word.length > 2 && word.substring(word.length - 2) == "+2") {
 		addByte(forthState.xcomp.builtins[word.substring(0, word.length - 2)].funcIndex);
 		addWord(forthState.main.ppop(forthState));
@@ -295,7 +298,7 @@ var immFuncs = {
 		addWordref("(next)");
 		addByte(relativeOffset(state));
 	},
-	'LIT"': function(state) {
+	'S"': function(state) {
 		addWordref("(br)");
 		var start = state.xcomp.here, len = 0;
 		addByte(0); // length to be updated
@@ -344,7 +347,7 @@ var nFuncs = {
 		var val = state.main.ppop(state);
 		forthState.writeWord(addr, val >>> 0);
 	},
-	"ALLOT0": function(state) {
+	"ALLOT": function(state) {
 		var count = state.main.ppop(state);
 		for(var i = 0 ; i < count; i++) {
 			addByte(0);
@@ -354,13 +357,20 @@ var nFuncs = {
 		var val = state.main.ppop(state);
 		addByte(val);
 	},
-	"BIN(": makeValue(0xe000), // some unused consecutive addresses
+	"T,": function(state) {
+		var val = state.main.ppop(state);
+		addWord(val);
+	},
+	"lblhere": makeValue(0xe000), // some unused consecutive addresses
 	"lblnext": makeValue(0xe004),
 	"lblcell": makeValue(0xe006),
 	"lbldoes": makeValue(0xe008),
 	"lblxt": makeValue(0xe00c),
 	"lblval": makeValue(0xe010),
 	"'~": makeConstant(0xe012),
+	"lblboot": makeValue(0xe014),
+	"lblmain": makeValue(0xe016),
+	"L1": makeValue(0xe018),
 	"HERE": function(state) {
 		state.main.ppush(state, state.xcomp.here);
 	},
@@ -375,10 +385,6 @@ var nFuncs = {
 	},
 	";CODE": function(state) {
 		interpretWords("lblnext", "JMPi,+2");
-	},
-	"CREATE": function(state) {
-		addEntry(state),
-		interpretWords("lblcell", "CALLi,+2");
 	},
 	',"': function(state) {
 		var ch = scriptBuffer.charCodeAt(scriptPos++);
@@ -415,6 +421,22 @@ var nFuncs = {
 			} else {
 				throw "Invalid constant: "+word;
 			}
+			var name = readWord();
+			addEntryByName(state, name);
+			interpretWords("i>,+2", "lblnext", "JMPi,+2");
+		}
+	},
+	"CONSTS+": function(state) {
+		var count = state.main.ppop(state);
+		var offset = state.main.ppop(state);
+		for(var i = 0; i < count; i++) {
+			var word = readWord();
+			if (/^-?[0-9]+$|^[0$][0-9a-fA-F]+$/.test(word)) {
+				interpretWord(word);
+			} else {
+				throw "Invalid constant: "+word;
+			}
+			state.main.ppush(state, state.main.ppop(state) + offset);
 			var name = readWord();
 			addEntryByName(state, name);
 			interpretWords("i>,+2", "lblnext", "JMPi,+2");
@@ -506,10 +528,22 @@ var nFuncs = {
 		state.main.ppush(state, a + b);
 	},
 	'XWRAP': function(state) {
-		state.main.ppush(state, 0x4000);
-		state.writeWord(0x08,  0x4000); // HERESTART
-		state.writeWord(0x06, state.xcomp.current);
+		var lblhere = state.readWord(0xe000);
+		state.writeWord(lblhere+2,  0x4000); // HERESTART
+		state.writeWord(lblhere, state.xcomp.current);
 	},
+	"X'": function(state) {
+		var word = readWord();
+		state.main.ppush(state, findFunc(forthState, forthState.xcomp.current, word));
+	},
+	"PC2A": function(state) {
+		interpretWords("HERE", "PC", "-", "+");
+	},
+	"~DOER": function(state) {
+		addEntry(state);
+		interpretWords("lbldoes", "CALLi,+2");
+		addWord(state.readWord(0xe012));
+	}
 };
 
 

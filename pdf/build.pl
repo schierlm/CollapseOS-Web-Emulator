@@ -12,13 +12,13 @@ my $path = "../collapseos/doc/";
 my @filelist = split($/, <<'DONE');
 	=General Documentation
 		intro.txt
-		primer.txt
 		usage.txt
 		impl.txt
 		dict.txt
 		blk.txt
 		rxtx.txt
 		blksrv.txt
+		grok.txt
 		design.txt
 		ed.txt
 		me.txt
@@ -34,6 +34,7 @@ my @filelist = split($/, <<'DONE');
 		ps2.txt
 		sega.txt
 		selfhost.txt
+		mspan.txt
 		algo.txt
 		faq.txt
 	=Assemblers
@@ -88,6 +89,7 @@ my @filelist = split($/, <<'DONE');
 		hw/6502/appleiie/intro.txt
 		hw/6502/appleiie/monitor.txt
 		hw/6502/appleiie/spihack.txt
+		hw/6502/appleiie/spi.txt
 	=Hardware: Various other devices
 		hw/8086/pcat.txt
 		hw/6809/coco2.txt
@@ -108,10 +110,12 @@ my @blkfslist = split($/, <<'DONE');
 		Memory editor: 35-39
 		AVR SPI programmer: 40-43
 		Sega ROM signer: 45
+		Virgil's Workspace: 50-51
 		Cross compilation: 200-205
 		Core words: 210-229
 		BLK subsystem: 230-234
 		RX/TX subsystem: 235
+		Media Span subsystem: 237
 		Grid subsystem: 240-241
 		PS/2 keyboard subsystem: 245-248
 		SD Card subsystem: 250-258
@@ -120,7 +124,7 @@ my @blkfslist = split($/, <<'DONE');
 	Z80@../arch/z80/blk.fs
 		Architecture index: 300
 		Z80 boot code: 301-314
-		Z80 assembler: 320-328
+		Z80 assembler: 320-329
 		AT28 EEPROM: 330
 		SPI relay: 332
 		TMS9918: 335-337
@@ -156,19 +160,19 @@ my @blkfslist = split($/, <<'DONE');
 		6809 HAL: 306-310
 		6809 assembler: 311-318
 		TRS-80 Color Computer 2: 320-324
-		6809 disassembler: 325-335
+		6809 disassembler: 325-336
 		6809 emulator: 340-354
-		Virgil's workspace: 360
+		Virgil's workspace: 360-361
 	6502@../arch/6502/blk.fs
 		Architecture index: 300
 		6502 macros and consts: 301
 		6502 assembler: 302-307
 		6502 port macros: 309
-		6502 boot code: 310-320
+		6502 boot code: 310-321
 		6502 disassembler: 330-334
 		6502 emulator: 335-342
-		Virgil's workspace: 350-355
-		Apple IIe drivers: 360-362
+		Virgil's workspace: 348-353
+		Apple IIe drivers: 360-365
 DONE
 
 sub escapeText {
