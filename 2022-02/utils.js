@@ -1,5 +1,6 @@
 function loadImageFile(file, callback, forceRaw) {
 	var PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+	var GZIP_SIGNATURE = [0x1F, 0x8B, 0x08];
 	var reader = new FileReader();
 	reader.onloadend = function(evt) {
 		// the double constructor is intended:
@@ -16,6 +17,19 @@ function loadImageFile(file, callback, forceRaw) {
 			}
 			if (same && !forceRaw) {
 				loadImageFromURL(URL.createObjectURL(new Blob([ result], {type: "image/png"})), callback);
+				return;
+			}
+			var same = true;
+			for(var i = 0; i < GZIP_SIGNATURE.length; i++) {
+				if (result[i] != GZIP_SIGNATURE[i]) {
+					same = false;
+					break;
+				}
+			}
+			if (same && !forceRaw) {
+				new Response(new Blob([result]).stream().pipeThrough(new DecompressionStream("gzip"))).bytes().then(function(result2) {
+					callback(result2);
+				});
 				return;
 			}
 		}

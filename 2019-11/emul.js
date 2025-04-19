@@ -384,6 +384,21 @@ window.onload = function() {
 		});
 	};
 	if (romfile.dataset.autoload && cfsfile.dataset.autoload && location.protocol != "file:") {
+	  if ('DecompressionStream' in window && /\.png$/.test(romfile.dataset.autoload) && /\.png$/.test(cfsfile.dataset.autoload)) {
+		fetch(romfile.dataset.autoload.replace(/\.png$/, ".rom.gz")).then(function(response) { return response.blob(); }).then(function(blob) {
+			loadImageFile(blob, function(result) {
+				document.getElementById("romstatus").innerHTML="ROM size: "+result.length;
+				emulROM = result;
+				fetch(cfsfile.dataset.autoload.replace(/\.png$/, ".cfs.gz")).then(function(response) { return response.blob(); }).then(function(blob) {
+					loadImageFile(blob, function(result2) {
+						emulSDCARDs[0].data = result2;
+						emulSDCARDs[0].used = result2.length;
+						resetCPU();
+					});
+				});
+			});
+		});
+	  } else {
 		loadImageFromURL(romfile.dataset.autoload, function(result) {
 			document.getElementById("romstatus").innerHTML="ROM size: "+result.length;
 			emulROM = result;
@@ -393,6 +408,7 @@ window.onload = function() {
 				resetCPU();
 			});
 		});
+	  }
 	}
 	document.getElementById("savecfs").onclick = function() {
 		saveSDCard(0);
