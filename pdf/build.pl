@@ -5,7 +5,7 @@ use strict;
 use POSIX;
 use MIME::Base64;
 
-my $snapshot='2021-09-24';
+my $snapshot='v1';
 my $timestamp = strftime("%Y-%m-%d %H:%M:%S", localtime time);
 my $path = "../collapseos/doc/";
 
@@ -137,9 +137,9 @@ my @blkfslist = split($/, <<'DONE');
 		SMS Ports: 368-369
 		TI-84+ LCD: 370-373
 		TI-84+ Keyboard: 375-379
-		TRS-80 4P drivers: 380-391
-		Dan SBC drivers: 395-409
-		Virgil's workspace: 410-416
+		TI-84+ Boot code & macros: 380-382
+		TRS-80 4P drivers: 390-401
+		Dan SBC drivers: 405-419
 	AVR@../arch/avr/blk.fs
 		Architecture index: 300
 		AVR macros: 301

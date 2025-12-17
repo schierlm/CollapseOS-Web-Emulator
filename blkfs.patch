@@ -1,24 +1,25 @@
 --- combined.fs
 +++ combined.fs
-@@ -12,11 +12,14 @@
+@@ -12,12 +12,15 @@
  370 TI-84+ LCD                 375 TI-84+ Keyboard
- 380 TRS-80 4P drivers
- 395 Dan SBC drivers            410 Virgil's workspace
+ 380 TI-84+ Boot code & macros
+ 390 TRS-80 4P drivers          405 Dan SBC drivers
 +
 +500 AVR        600 8086        700 6809       800 6502
  ( ----- 001 )
  \ Z80 port's Macros and constants. See doc/code/z80.txt
- : Z80A 4 LOAD ( str ) 320 329 LOADR 7 LOAD ( Flow words ) ;
+ : Z80A 5 LOAD ( wordtbl ) 320 329 LOADR 7 LOAD ( Flow words ) ;
  : Z80C 302 314 LOADR ;
- : TRS804PM 380 LOAD ;
+ : TRS804PM 390 LOAD ;
+ : TI84M 380 LOAD ; : TI84BOOT 381 382 LOADR ;
 +: XARCHM 501 LOAD 601 LOAD 701 LOAD 801 LOAD ;
  \ see comment at TICKS' definition
  \ 7.373MHz target: 737t. outer: 37t inner: 16t
  \ tickfactor = (737 - 37) / 16
-@@ -1134,16 +1137,18 @@
-   ;CODE
- CODE to A 1 LD, (to?) A LD, ;CODE
- CODE fooval ( lblval ) CALL, $1234 ,
+@@ -1101,16 +1104,18 @@
+   DUP 4 = IF VD_CURCL @ [ VID_WDTH 28 - LITN ] > IF
+     [ VID_WDTH 24 - LITN ] ELSE VD_CURCL @ 4 + THEN
+     VD_CURCL ! DROP 0 THEN DUP UNTIL ;
 +( ----- 199 )
 +
  ( ----- 000 )
@@ -39,7 +40,7 @@
  ( ----- 002 )
  \ AVR assembler. See doc/asm/avr.txt.
  \ We divide by 2 because each PC represents a word.
-@@ -1604,15 +1609,17 @@
+@@ -1571,15 +1576,17 @@
    R1 TST, ' BRNE AGAIN?, \ end main
  R16 $00 LDI, UCSR0B R16 STS, \ Disable UART
  BEGIN, AGAIN, \ end program
@@ -61,7 +62,7 @@
  ( ----- 002 )
  \ 8086 boot code. PS=SP, RS=BP, IP=DX, TOS=BX
  FJR JRi, TO L1 ( main ) 4 OALLOT ( 3=boot driveno )
-@@ -1879,21 +1886,23 @@
+@@ -1846,21 +1853,23 @@
    AL BL MOVrr, BX POPx, AH $0e MOVri, $10 INT, ;CODE
  : CELL! ( c pos -- ) 0 CURSOR! _ ;
  : NEWLN ( old -- new ) 1+ DUP LINES = IF 1- CR _ LF _ THEN ;
@@ -95,7 +96,7 @@
  ( ----- 002 )
  \ 6809 Boot code. IP=Y, PS=S, RS=U
  PS_ADDR # LDS, RS_ADDR # LDU, 0 () JMP, PC 2 - TO lblboot
-@@ -2517,20 +2526,22 @@
+@@ -2484,20 +2493,22 @@
  ( write ) 42 # LDD, PSHS, D TO? () STB,
  L3 BR BRA,
  'HERE !
